@@ -45,19 +45,19 @@ values:
 namespace and values are optional
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := helmt.HelmVersion()
-		if err != nil {
-			return err
-		}
-
 		if len(args) != 1 {
 			return errors.New("missing filename")
 		}
 
+		err := helmt.HelmVersion()
+		if err != nil {
+			return err
+		}
 		err = helmt.HelmTemplate(args[0])
 		if err != nil {
 			return nil
 		}
+
 		return nil
 	},
 }

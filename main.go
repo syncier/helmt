@@ -15,8 +15,22 @@ limitations under the License.
 */
 package main
 
-import "github.com/syncier/helmt/cmd"
+import (
+	"fmt"
+
+	"github.com/syncier/helmt/cmd"
+)
+
+var version, commit, date string
 
 func main() {
-	cmd.Execute()
+
+	cmd.Execute(versionString())
+}
+
+func versionString() string {
+	if version != "" || commit != "" {
+		return fmt.Sprintf("%s (Commit: %s, Build Date: %s)", version, commit, date)
+	}
+	return "?.?.?"
 }

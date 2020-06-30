@@ -23,6 +23,7 @@ type HelmChart struct {
 	Chart      string   `yaml:"chart" validate:"required"`
 	Version    string   `yaml:"version" validate:"required"`
 	Repository string   `yaml:"repository" validate:"required"`
+	Name       string   `yaml:"name" validate:"required"`
 	Namespace  string   `yaml:"namespace"`
 	Values     []string `yaml:"values"`
 }
@@ -56,16 +57,19 @@ func HelmTemplate(filename string) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	return template(chartVersion, chart.Values, chart.Namespace)
+	return template(chartVersion, chart.Name, chart.Values, chart.Namespace)
 }
 
 func HelmVersion() error {
 	return Execute("helm", "version")
 }
 
-func template(chartVersion string, values []string, namespace string) error {
+func template(chartVersion string, release string, values []string, namespace string) error {
 	//return Execute("helm", "template", "--namespace", namespace, "--values", values[0], "--output-dir", ".", chartVersion)
 	args := []string{"template"}
+	if len(release) > 0 {
+		args = append(args, release)
+	}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
 	}

@@ -85,6 +85,13 @@ func Test_readParameters(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "missing release",
+			args: args{
+				filename: "testdata/helm-chart-missing-release.yaml",
+			},
+			wantErr: true,
+		},
+		{
 			name: "file with mandatory parameters only",
 			args: args{
 				filename: "testdata/helm-chart-mandatory-parameters.yaml",
@@ -93,6 +100,7 @@ func Test_readParameters(t *testing.T) {
 				Chart:      "jenkins",
 				Version:    "2.0.0",
 				Repository: "https://kubernetes-charts.storage.googleapis.com",
+				Name:       "something",
 			},
 		},
 		{
@@ -104,6 +112,7 @@ func Test_readParameters(t *testing.T) {
 				Chart:      "stable/jenkins",
 				Version:    "2.0.0",
 				Repository: "https://kubernetes-charts.storage.googleapis.com",
+				Name:       "my-jenkins",
 			},
 		},
 		{
@@ -116,6 +125,7 @@ func Test_readParameters(t *testing.T) {
 				Version:    "5.6.0",
 				Repository: "https://hub.syncier.cloud/chartrepo/library/charts",
 				Namespace:  "jenkins",
+				Name:       "jenkins",
 				Values:     []string{"values1.yaml", "values2.yaml"},
 			},
 		},
@@ -151,18 +161,26 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
-				"helm template --output-dir . jenkins-2.0.0.tgz",
+				"helm template something --output-dir . jenkins-2.0.0.tgz",
 			},
 		},
 		{
-			name: "helm template with namespace",
+			name: "helm template with namespace and release",
 			args: args{
 				filename: "testdata/helm-chart.yaml",
 			},
 			expectedCommands: []string{
 				"helm fetch https://hub.syncier.cloud/chartrepo/library/charts/syncier-jenkins-5.6.0.tgz",
-				"helm template --namespace jenkins --values values1.yaml --values values2.yaml --output-dir . syncier-jenkins-5.6.0.tgz",
+				"helm template jenkins --namespace jenkins --values values1.yaml --values values2.yaml --output-dir . syncier-jenkins-5.6.0.tgz",
 			},
+		},
+		{
+			name: "helm template with namespace and release",
+			args: args{
+				filename: "testdata/helm-chart-missing-release.yaml",
+			},
+			expectedCommands: []string{},
+			wantErr:          true,
 		},
 	}
 	for _, tt := range tests {

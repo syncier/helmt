@@ -2,3 +2,4 @@ chart: stable/jenkins
 version: 2.0.0
 repository: https://kubernetes-charts.storage.googleapis.com
 namespace:
+name: my-jenkins

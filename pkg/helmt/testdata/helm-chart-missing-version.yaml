@@ -1,2 +1,3 @@
 chart: jenkins
 repository: https://kubernetes-charts.storage.googleapis.com
+name: jenkins

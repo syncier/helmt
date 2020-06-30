@@ -10,10 +10,6 @@ repos:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
       - id: end-of-file-fixer
-  - repo: https://github.com/jumanjihouse/pre-commit-hooks
-    rev: 1.11.2
-    hooks:
-      - id: shellcheck
   - repo: https://github.com/prettier/prettier
     rev: 1.19.1
     hooks:

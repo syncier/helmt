@@ -51,6 +51,12 @@ func HelmTemplate(filename string) error {
 	if err != nil {
 		return err
 	}
+
+	err = HelmVersion()
+	if err != nil {
+		return err
+	}
+
 	err = fetch(chart.Repository, chart.Chart, chart.Version)
 	if err != nil {
 		return err

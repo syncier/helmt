@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -45,20 +44,14 @@ values:
 namespace and values are optional
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return errors.New("missing filename")
+		filename := "helm-chart.yaml"
+
+		fmt.Printf("templating '%s'\n", filename)
+		if len(args) == 1 {
+			filename = args[0]
 		}
 
-		err := helmt.HelmVersion()
-		if err != nil {
-			return err
-		}
-		err = helmt.HelmTemplate(args[0])
-		if err != nil {
-			return nil
-		}
-
-		return nil
+		return helmt.HelmTemplate(filename)
 	},
 }
 
@@ -67,7 +60,6 @@ namespace and values are optional
 func Execute(version string) {
 	rootCmd.Version = version
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }

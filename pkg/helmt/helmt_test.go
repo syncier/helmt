@@ -147,11 +147,13 @@ func Test_readParameters(t *testing.T) {
 func TestHelmTemplate(t *testing.T) {
 	type args struct {
 		filename string
+		clean    bool
 	}
 	tests := []struct {
 		name             string
 		args             args
 		expectedCommands []string
+		wantRemoveOutput bool
 		wantErr          bool
 	}{
 		{
@@ -184,15 +186,36 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{},
 			wantErr:          true,
 		},
+		{
+			name: "with clean flag",
+			args: args{
+				filename: "testdata/helm-chart-mandatory-parameters.yaml",
+				clean:    true,
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
+				"helm template something --output-dir . jenkins-2.0.0.tgz",
+			},
+			wantRemoveOutput: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			executor := NewTestExecutor(t)
 			Execute = executor.execCommand
-			if err := HelmTemplate(tt.args.filename); (err != nil) != tt.wantErr {
+
+			outputRemoved := false
+			removeOutput = func(_ *HelmChart) error {
+				outputRemoved = true
+				return nil
+			}
+
+			if err := HelmTemplate(tt.args.filename, tt.args.clean); (err != nil) != tt.wantErr {
 				t.Errorf("HelmTemplate() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				assert.EqualValues(t, tt.expectedCommands, executor.commands)
+				assert.Equal(t, tt.wantRemoveOutput, outputRemoved)
 			}
 		})
 	}

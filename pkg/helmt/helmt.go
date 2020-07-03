@@ -3,6 +3,7 @@ package helmt
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -12,9 +13,10 @@ import (
 )
 
 var (
-	Output  = color.Output
-	Error   = color.Error
-	Execute = execCommand
+	Output       = color.Output
+	Error        = color.Error
+	Execute      = execCommand
+	removeOutput = removeOutputCommand
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
 )
@@ -46,7 +48,7 @@ func readParameters(filename string) (*HelmChart, error) {
 	return chart, nil
 }
 
-func HelmTemplate(filename string) error {
+func HelmTemplate(filename string, clean bool) error {
 	chart, err := readParameters(filename)
 	if err != nil {
 		return err
@@ -60,6 +62,13 @@ func HelmTemplate(filename string) error {
 	err = fetch(chart.Repository, chart.Chart, chart.Version)
 	if err != nil {
 		return err
+	}
+
+	if clean {
+		err = removeOutput(chart)
+		if err != nil {
+			return err
+		}
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
@@ -98,4 +107,9 @@ func execCommand(name string, arg ...string) error {
 	command.Stdout = Output
 	command.Stderr = Error
 	return command.Run()
+}
+
+func removeOutputCommand(chart *HelmChart) error {
+	color.Magenta("removing folder %s", chart.Chart)
+	return os.RemoveAll(chart.Chart)
 }

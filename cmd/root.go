@@ -26,6 +26,7 @@ import (
 )
 
 var cfgFile string
+var clean bool
 
 var rootCmd = &cobra.Command{
 	Use:   "helmt <filename>",
@@ -46,12 +47,12 @@ namespace and values are optional
 	RunE: func(cmd *cobra.Command, args []string) error {
 		filename := "helm-chart.yaml"
 
-		fmt.Printf("templating '%s'\n", filename)
 		if len(args) == 1 {
 			filename = args[0]
 		}
+		fmt.Printf("templating '%s'\n", filename)
 
-		return helmt.HelmTemplate(filename)
+		return helmt.HelmTemplate(filename, clean)
 	},
 }
 
@@ -72,6 +73,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
 }
 
 // initConfig reads in config file and ENV variables if set.

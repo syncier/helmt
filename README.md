@@ -7,6 +7,7 @@ Usage:
   helmt <filename> [flags]
 
 Flags:
+      --clean           delete existing templates before rendering
       --config string   config file (default is $HOME/.helmt.yaml)
   -h, --help            help for helmt
   -v, --version         version for helmt

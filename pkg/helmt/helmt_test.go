@@ -164,7 +164,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
-				"helm template something jenkins-2.0.0.tgz --output-dir .",
+				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
 			},
 		},
 		{
@@ -175,7 +175,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://hub.syncier.cloud/chartrepo/library/charts/syncier-jenkins-5.6.0.tgz",
-				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --values values1.yaml --values values2.yaml --output-dir .",
+				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir .",
 			},
 		},
 		{
@@ -195,7 +195,20 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
-				"helm template something jenkins-2.0.0.tgz --output-dir .",
+				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
+			},
+			wantRemoveOutput: true,
+		},
+		{
+			name: "skip crds",
+			args: args{
+				filename: "testdata/helm-chart-skip-crds.yaml",
+				clean:    true,
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.1.0.tgz",
+				"helm template something jenkins-2.1.0.tgz --include-crds --output-dir .",
 			},
 			wantRemoveOutput: true,
 		},

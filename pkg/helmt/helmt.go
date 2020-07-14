@@ -28,6 +28,7 @@ type HelmChart struct {
 	Name       string   `yaml:"name" validate:"required"`
 	Namespace  string   `yaml:"namespace"`
 	Values     []string `yaml:"values"`
+	skipCRDs   bool     `yaml:"skipCRDs"`
 }
 
 func readParameters(filename string) (*HelmChart, error) {
@@ -72,17 +73,20 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	return template(chart.Name, chartVersion, chart.Values, chart.Namespace)
+	return template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.skipCRDs)
 }
 
 func HelmVersion() error {
 	return Execute("helm", "version")
 }
 
-func template(name string, chart string, values []string, namespace string) error {
+func template(name string, chart string, values []string, namespace string, skipCRDs bool) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
+	}
+	if !skipCRDs {
+		args = append(args, "--include-crds")
 	}
 	for _, valuesfile := range values {
 		args = append(args, "--values", valuesfile)

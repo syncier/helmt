@@ -43,7 +43,7 @@ Then you can run `helmt helm-charts.yaml` and it will download the chart and ren
 helm version
 version.BuildInfo{Version:"v3.1.1", GitCommit:"afe70585407b420d0097d07b21c47dc511525ac8", GitTreeState:"clean", GoVersion:"go1.13.8"}
 helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz
-helm template jenkins --output-dir . jenkins-2.0.0.tgz
+helm template jenkins jenkins-2.0.0.tgz --output-dir .
 wrote ./jenkins/templates/service-account.yaml
 wrote ./jenkins/templates/secret.yaml
 wrote ./jenkins/templates/config.yaml

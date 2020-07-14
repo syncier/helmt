@@ -1,6 +1,6 @@
 chart: syncier-jenkins
 version: 5.6.0
-repository: https://hub.syncier.cloud/chartrepo/library/charts
+repository: https://hub.syncier.cloud/chartrepo/library
 name: jenkins
 namespace: jenkins
 values:

@@ -98,7 +98,7 @@ func template(name string, chart string, values []string, namespace string, skip
 }
 
 func fetch(repository, chart, version string) error {
-	return Execute("helm", "fetch", fmt.Sprintf("%s/%s-%s.tgz", repository, chart, version))
+	return Execute("helm", "fetch", "--repo", repository, "--version", version, chart)
 }
 
 func execCommand(name string, arg ...string) error {

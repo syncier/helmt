@@ -164,7 +164,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
-				"helm template something --output-dir . jenkins-2.0.0.tgz",
+				"helm template something jenkins-2.0.0.tgz --output-dir .",
 			},
 		},
 		{
@@ -175,7 +175,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://hub.syncier.cloud/chartrepo/library/charts/syncier-jenkins-5.6.0.tgz",
-				"helm template jenkins --namespace jenkins --values values1.yaml --values values2.yaml --output-dir . syncier-jenkins-5.6.0.tgz",
+				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --values values1.yaml --values values2.yaml --output-dir .",
 			},
 		},
 		{
@@ -195,7 +195,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
-				"helm template something --output-dir . jenkins-2.0.0.tgz",
+				"helm template something jenkins-2.0.0.tgz --output-dir .",
 			},
 			wantRemoveOutput: true,
 		},

@@ -72,19 +72,15 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	return template(chartVersion, chart.Name, chart.Values, chart.Namespace)
+	return template(chart.Name, chartVersion, chart.Values, chart.Namespace)
 }
 
 func HelmVersion() error {
 	return Execute("helm", "version")
 }
 
-func template(chartVersion string, release string, values []string, namespace string) error {
-	//return Execute("helm", "template", "--namespace", namespace, "--values", values[0], "--output-dir", ".", chartVersion)
-	args := []string{"template"}
-	if len(release) > 0 {
-		args = append(args, release)
-	}
+func template(name string, chart string, values []string, namespace string) error {
+	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
 	}
@@ -92,7 +88,7 @@ func template(chartVersion string, release string, values []string, namespace st
 		args = append(args, "--values", valuesfile)
 	}
 
-	args = append(args, "--output-dir", ".", chartVersion)
+	args = append(args, "--output-dir", ".")
 
 	return Execute("helm", args...)
 }

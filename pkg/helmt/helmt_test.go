@@ -123,7 +123,7 @@ func Test_readParameters(t *testing.T) {
 			want: &HelmChart{
 				Chart:      "syncier-jenkins",
 				Version:    "5.6.0",
-				Repository: "https://hub.syncier.cloud/chartrepo/library/charts",
+				Repository: "https://hub.syncier.cloud/chartrepo/library",
 				Namespace:  "jenkins",
 				Name:       "jenkins",
 				Values:     []string{"values1.yaml", "values2.yaml"},
@@ -163,7 +163,7 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
 				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
 			},
 		},
@@ -174,7 +174,7 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch https://hub.syncier.cloud/chartrepo/library/charts/syncier-jenkins-5.6.0.tgz",
+				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
 				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir .",
 			},
 		},
@@ -194,7 +194,7 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.0.0.tgz",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
 				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
 			},
 			wantRemoveOutput: true,
@@ -207,7 +207,7 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch https://kubernetes-charts.storage.googleapis.com/jenkins-2.1.0.tgz",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
 				"helm template something jenkins-2.1.0.tgz --include-crds --output-dir .",
 			},
 			wantRemoveOutput: true,

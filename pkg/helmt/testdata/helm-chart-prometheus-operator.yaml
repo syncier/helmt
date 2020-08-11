@@ -5,3 +5,5 @@ name: agent-prometheus
 namespace: infra-monitoring
 values:
   - prometheus-operator-values.yaml
+postProcess:
+  generateKustomization: true

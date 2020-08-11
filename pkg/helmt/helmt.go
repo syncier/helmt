@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -13,22 +15,28 @@ import (
 )
 
 var (
-	Output       = color.Output
-	Error        = color.Error
-	Execute      = execCommand
-	removeOutput = removeOutputCommand
+	Output                        = color.Output
+	Error                         = color.Error
+	execute                       = execCommand
+	removeOutput                  = removeOutputCommand
+	generateKustomizationFunction = generateKustomization
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
 )
 
 type HelmChart struct {
-	Chart      string   `yaml:"chart" validate:"required"`
-	Version    string   `yaml:"version" validate:"required"`
-	Repository string   `yaml:"repository" validate:"required"`
-	Name       string   `yaml:"name" validate:"required"`
-	Namespace  string   `yaml:"namespace"`
-	Values     []string `yaml:"values"`
-	skipCRDs   bool     `yaml:"skipCRDs"`
+	Chart       string      `yaml:"chart" validate:"required"`
+	Version     string      `yaml:"version" validate:"required"`
+	Repository  string      `yaml:"repository" validate:"required"`
+	Name        string      `yaml:"name" validate:"required"`
+	Namespace   string      `yaml:"namespace"`
+	Values      []string    `yaml:"values"`
+	SkipCRDs    bool        `yaml:"skipCRDs"`
+	PostProcess PostProcess `yaml:"postProcess"`
+}
+
+type PostProcess struct {
+	GenerateKustomization bool `yaml:"generateKustomization"`
 }
 
 func readParameters(filename string) (*HelmChart, error) {
@@ -73,11 +81,21 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	return template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.skipCRDs)
+	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs)
+	if err != nil {
+		return err
+	}
+	if chart.PostProcess.GenerateKustomization {
+		err = generateKustomizationFunction(chart.Chart)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func HelmVersion() error {
-	return Execute("helm", "version")
+	return execute("helm", "version")
 }
 
 func template(name string, chart string, values []string, namespace string, skipCRDs bool) error {
@@ -94,11 +112,11 @@ func template(name string, chart string, values []string, namespace string, skip
 
 	args = append(args, "--output-dir", ".")
 
-	return Execute("helm", args...)
+	return execute("helm", args...)
 }
 
 func fetch(repository, chart, version string) error {
-	return Execute("helm", "fetch", "--repo", repository, "--version", version, chart)
+	return execute("helm", "fetch", "--repo", repository, "--version", version, chart)
 }
 
 func execCommand(name string, arg ...string) error {
@@ -112,4 +130,44 @@ func execCommand(name string, arg ...string) error {
 func removeOutputCommand(chart *HelmChart) error {
 	color.Magenta("removing folder %s", chart.Chart)
 	return os.RemoveAll(chart.Chart)
+}
+
+func generateKustomization(directory string) error {
+	kustomization, err := os.Create(path.Join(directory, "kustomization.yaml"))
+	if err != nil {
+		return err
+	}
+	defer kustomization.Close()
+
+	_, err = kustomization.WriteString(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+`)
+	if err != nil {
+		return err
+	}
+
+	err = filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(directory, path)
+		if err != nil {
+			return err
+		}
+		if rel == "kustomization.yaml" {
+			return nil
+		}
+
+		_, err = kustomization.WriteString(fmt.Sprintf("  - %s\n", rel))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
 }

@@ -41,8 +41,11 @@ namespace: jenkins
 values:
   - values1.yaml
   - values2.yaml
+skipCRDs: false
+postProcess:
+  generateKustomization: false
 
-namespace and values are optional
+namespace, values, skipCRDs and postProcess are optional
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		filename := "helm-chart.yaml"

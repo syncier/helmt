@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	Output                        = color.Output
-	Error                         = color.Error
-	execute                       = execCommand
-	removeOutput                  = removeOutputCommand
-	generateKustomizationFunction = generateKustomization
+	Output                = color.Output
+	Error                 = color.Error
+	execute               = execCommand
+	removeOutput          = removeOutputCommand
+	generateKustomization = generateKustomizationCommand
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
 )
@@ -86,7 +86,7 @@ func HelmTemplate(filename string, clean bool) error {
 		return err
 	}
 	if chart.PostProcess.GenerateKustomization {
-		err = generateKustomizationFunction(chart.Chart)
+		err = generateKustomization(chart.Chart)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func removeOutputCommand(chart *HelmChart) error {
 	return os.RemoveAll(chart.Chart)
 }
 
-func generateKustomization(directory string) error {
+func generateKustomizationCommand(directory string) error {
 	kustomization, err := os.Create(path.Join(directory, "kustomization.yaml"))
 	if err != nil {
 		return err

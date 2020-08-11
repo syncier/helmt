@@ -234,7 +234,7 @@ func TestHelmTemplate(t *testing.T) {
 			wantRemoveOutput: true,
 		},
 		{
-			name: "skip crds",
+			name: "generate kustomization",
 			args: args{
 				filename: "testdata/helm-chart-prometheus-operator.yaml",
 				clean:    true,
@@ -259,7 +259,7 @@ func TestHelmTemplate(t *testing.T) {
 				return nil
 			}
 			kustomizationGenerated := false
-			generateKustomizationFunction = func(directory string) error {
+			generateKustomization = func(directory string) error {
 				kustomizationGenerated = true
 				return nil
 			}
@@ -458,8 +458,8 @@ resources:
 			err = copy.Copy(tt.args.directory, dir)
 			assert.NoError(t, err)
 
-			if err := generateKustomization(dir); (err != nil) != tt.wantErr {
-				t.Errorf("generateKustomization() error = %v, wantErr %v", err, tt.wantErr)
+			if err := generateKustomizationCommand(dir); (err != nil) != tt.wantErr {
+				t.Errorf("generateKustomizationCommand() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			kustomization := path.Join(dir, "kustomization.yaml")
 			stat, err := os.Stat(kustomization)

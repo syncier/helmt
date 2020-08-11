@@ -1,0 +1,20 @@
+---
+# Source: prometheus-operator/templates/prometheus-operator/psp-clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: agent-prometheus-operator-psp
+  labels:
+    app: prometheus-operator-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agent-prometheus-operator-psp
+subjects:
+  - kind: ServiceAccount
+    name: agent-prometheus-operator
+    namespace: infra-monitoring

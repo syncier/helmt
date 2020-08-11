@@ -1,0 +1,19 @@
+---
+# Source: prometheus-operator/templates/alertmanager/psp-role.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: agent-prometheus-alertmanager
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-alertmanager
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - agent-prometheus-alertmanager

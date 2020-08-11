@@ -1,0 +1,61 @@
+---
+# Source: prometheus-operator/templates/prometheus/prometheus.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: agent-prometheus-prometheus
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-prometheus
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  alerting:
+    alertmanagers:
+      - namespace: infra-monitoring
+        name: agent-prometheus-alertmanager
+        port: web
+        pathPrefix: "/"
+        apiVersion: v2
+  baseImage: quay.io/prometheus/prometheus
+  version: v2.19.1
+  externalLabels:
+    cluster: dev
+  externalUrl: "http://prometheus.some.cluster/"
+  paused: false
+  replicas: 1
+  logLevel:  info
+  logFormat:  logfmt
+  listenLocal: false
+  enableAdminAPI: false
+  resources:
+    limits:
+      memory: 8Gi
+    requests:
+      memory: 8Gi
+  retention: "10d"
+  retentionSize: "25GB"
+  routePrefix: "/"
+  serviceAccountName: agent-prometheus-prometheus
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  ruleNamespaceSelector: {}
+  ruleSelector: {}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+        storageClassName: gp2
+  portName: web

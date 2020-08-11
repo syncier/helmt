@@ -1,0 +1,23 @@
+---
+# Source: prometheus-operator/templates/grafana/configmaps-datasources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-prometheus-grafana-datasource
+  namespace: infra-monitoring
+  labels:
+    grafana_datasource: "1"
+    app: prometheus-operator-grafana
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+data:
+  datasource.yaml: |-
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://agent-prometheus-prometheus:9090/
+      access: proxy
+      isDefault: true

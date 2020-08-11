@@ -1,0 +1,23 @@
+---
+# Source: prometheus-operator/templates/prometheus/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-prometheus
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-prometheus
+    self-monitor: "true"
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  ports:
+  - name: web
+    port: 9090
+    targetPort: 9090
+  selector:
+    app: prometheus
+    prometheus: agent-prometheus-prometheus
+  type: "ClusterIP"

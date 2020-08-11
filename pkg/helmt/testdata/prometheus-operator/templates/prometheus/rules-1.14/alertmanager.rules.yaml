@@ -1,0 +1,41 @@
+---
+# Source: prometheus-operator/templates/prometheus/rules-1.14/alertmanager.rules.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: agent-prometheus-alertmanager.rules
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  groups:
+  - name: alertmanager.rules
+    rules:
+    - alert: AlertmanagerConfigInconsistent
+      annotations:
+        message: The configuration of the instances of the Alertmanager cluster `{{$labels.service}}` are out of sync.
+      expr: count_values("config_hash", alertmanager_config_hash{job="agent-prometheus-alertmanager",namespace="infra-monitoring"}) BY (service) / ON(service) GROUP_LEFT() label_replace(max(prometheus_operator_spec_replicas{job="agent-prometheus-operator",namespace="infra-monitoring",controller="alertmanager"}) by (name, job, namespace, controller), "service", "$1", "name", "(.*)") != 1
+      for: 5m
+      labels:
+        severity: critical
+    - alert: AlertmanagerFailedReload
+      annotations:
+        message: Reloading Alertmanager's configuration has failed for {{ $labels.namespace }}/{{ $labels.pod}}.
+      expr: alertmanager_config_last_reload_successful{job="agent-prometheus-alertmanager",namespace="infra-monitoring"} == 0
+      for: 10m
+      labels:
+        severity: warning
+    - alert: AlertmanagerMembersInconsistent
+      annotations:
+        message: Alertmanager has not found all other members of the cluster.
+      expr: |-
+        alertmanager_cluster_members{job="agent-prometheus-alertmanager",namespace="infra-monitoring"}
+          != on (service) GROUP_LEFT()
+        count by (service) (alertmanager_cluster_members{job="agent-prometheus-alertmanager",namespace="infra-monitoring"})
+      for: 5m
+      labels:
+        severity: critical

@@ -1,0 +1,7 @@
+chart: prometheus-operator
+version: 8.12.15
+repository: https://kubernetes-charts.storage.googleapis.com
+name: agent-prometheus
+namespace: infra-monitoring
+values:
+  - prometheus-operator-values.yaml

@@ -1,0 +1,25 @@
+---
+# Source: prometheus-operator/templates/exporters/core-dns/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agent-prometheus-coredns
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-coredns
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      app: prometheus-operator-coredns
+      release: "agent-prometheus"
+  namespaceSelector:
+    matchNames:
+      - "kube-system"
+  endpoints:
+  - port: http-metrics
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token

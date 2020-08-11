@@ -1,0 +1,182 @@
+---
+# Source: jenkins/templates/jenkins-master-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: something-jenkins
+  namespace: default
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-2.0.0"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "something"
+    "app.kubernetes.io/component": "jenkins-master"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      "app.kubernetes.io/component": "jenkins-master"
+      "app.kubernetes.io/instance": "something"
+  template:
+    metadata:
+      labels:
+        "app.kubernetes.io/name": 'jenkins'
+        "helm.sh/chart": "jenkins-2.0.0"
+        "app.kubernetes.io/managed-by": "Helm"
+        "app.kubernetes.io/instance": "something"
+        "app.kubernetes.io/component": "jenkins-master"
+      annotations:
+        checksum/config: 362e9a5e8de323a76ee0f17709e6afd247428f39926407dfecfd37b76a7dcc6d
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      serviceAccountName: "something-jenkins"
+      initContainers:
+        - name: "copy-default-config"
+          image: "jenkins/jenkins:lts"
+          imagePullPolicy: "Always"
+          command: [ "sh", "/var/jenkins_config/apply_config.sh" ]
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: something-jenkins
+                  key: jenkins-admin-password
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: something-jenkins
+                  key: jenkins-admin-user
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+            - mountPath: /var/jenkins_plugins
+              name: plugin-dir
+      containers:
+        - name: jenkins
+          image: "jenkins/jenkins:lts"
+          imagePullPolicy: "Always"
+          args: [ "--argumentsRealm.passwd.$(ADMIN_USER)=$(ADMIN_PASSWORD)",  "--argumentsRealm.roles.$(ADMIN_USER)=admin", "--httpPort=8080"]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JAVA_OPTS
+              value: >
+                
+                 -Dcasc.reload.token=$(POD_NAME) 
+            - name: JENKINS_OPTS
+              value: ""
+            - name: JENKINS_SLAVE_AGENT_PORT
+              value: "50000"
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: something-jenkins
+                  key: jenkins-admin-password
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: something-jenkins
+                  key: jenkins-admin-user
+            - name: CASC_JENKINS_CONFIG
+              value: /var/jenkins_home/casc_configs
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 50000
+              name: slavelistener
+          livenessProbe:
+            httpGet:
+              path: "/login"
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: "/login"
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+              readOnly: false
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+              readOnly: true
+            - mountPath: /usr/share/jenkins/ref/plugins/
+              name: plugin-dir
+              readOnly: false
+            - name: sc-config-volume
+              mountPath: /var/jenkins_home/casc_configs
+        - name: jenkins-sc-config
+          image: "kiwigrid/k8s-sidecar:0.1.144"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: LABEL
+              value: "something-jenkins-jenkins-config"
+            - name: FOLDER
+              value: "/var/jenkins_home/casc_configs"
+            - name: NAMESPACE
+              value: "default"
+            - name: REQ_URL
+              value: "http://localhost:8080/reload-configuration-as-code/?casc-reload-token=$(POD_NAME)"
+            - name: REQ_METHOD
+              value: "POST"
+          resources:
+            {}
+          volumeMounts:
+            - name: sc-config-volume
+              mountPath: "/var/jenkins_home/casc_configs"
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+
+      volumes:
+      - name: plugins
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+      - name: jenkins-config
+        configMap:
+          name: something-jenkins
+      - name: plugin-dir
+        emptyDir: {}
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: something-jenkins
+      - name: sc-config-volume
+        emptyDir: {}

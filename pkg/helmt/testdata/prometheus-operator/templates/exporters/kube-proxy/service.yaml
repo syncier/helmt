@@ -1,0 +1,24 @@
+---
+# Source: prometheus-operator/templates/exporters/kube-proxy/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-kube-proxy
+  labels:
+    app: prometheus-operator-kube-proxy
+    jobLabel: kube-proxy
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 10249
+      protocol: TCP
+      targetPort: 10249
+  selector:
+    k8s-app: kube-proxy
+  type: ClusterIP

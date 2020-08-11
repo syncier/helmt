@@ -1,0 +1,21 @@
+---
+# Source: prometheus-operator/templates/exporters/node-exporter/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agent-prometheus-node-exporter
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-node-exporter
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      app: prometheus-node-exporter
+      release: agent-prometheus
+  endpoints:
+  - port: metrics

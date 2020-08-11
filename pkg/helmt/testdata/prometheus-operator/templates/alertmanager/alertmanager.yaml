@@ -1,0 +1,32 @@
+---
+# Source: prometheus-operator/templates/alertmanager/alertmanager.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: agent-prometheus-alertmanager
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-alertmanager
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  baseImage: quay.io/prometheus/alertmanager
+  version: v0.20.0
+  replicas: 1
+  listenLocal: false
+  serviceAccountName: agent-prometheus-alertmanager
+  externalUrl: "http://alertmanager.some.cluster/"
+  paused: false
+  logFormat: "logfmt"
+  logLevel:  "info"
+  retention: "120h"
+  configSecret: alertmanager-config
+  routePrefix: "/"
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  priorityClassName: infrastructure-critical
+  portName: web

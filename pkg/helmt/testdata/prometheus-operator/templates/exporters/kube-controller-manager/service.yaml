@@ -1,0 +1,24 @@
+---
+# Source: prometheus-operator/templates/exporters/kube-controller-manager/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-kube-controller-manager
+  labels:
+    app: prometheus-operator-kube-controller-manager
+    jobLabel: kube-controller-manager
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 10252
+      protocol: TCP
+      targetPort: 10252
+  selector:
+    k8s-app: kube-controller-manager
+  type: ClusterIP

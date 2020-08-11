@@ -1,0 +1,25 @@
+---
+# Source: prometheus-operator/templates/prometheus-operator/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-operator
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
+  selector:
+    app: prometheus-operator-operator
+    release: "agent-prometheus"
+  type: "ClusterIP"

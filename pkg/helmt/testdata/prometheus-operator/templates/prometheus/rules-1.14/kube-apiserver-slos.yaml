@@ -1,0 +1,61 @@
+---
+# Source: prometheus-operator/templates/prometheus/rules-1.14/kube-apiserver-slos.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: agent-prometheus-kube-apiserver-slos
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  groups:
+  - name: kube-apiserver-slos
+    rules:
+    - alert: KubeAPIErrorBudgetBurn
+      annotations:
+        message: The API server is burning too much error budget
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
+      expr: |-
+        sum(apiserver_request:burnrate1h) > (14.40 * 0.01000)
+        and
+        sum(apiserver_request:burnrate5m) > (14.40 * 0.01000)
+      for: 2m
+      labels:
+        severity: critical
+    - alert: KubeAPIErrorBudgetBurn
+      annotations:
+        message: The API server is burning too much error budget
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
+      expr: |-
+        sum(apiserver_request:burnrate6h) > (6.00 * 0.01000)
+        and
+        sum(apiserver_request:burnrate30m) > (6.00 * 0.01000)
+      for: 15m
+      labels:
+        severity: critical
+    - alert: KubeAPIErrorBudgetBurn
+      annotations:
+        message: The API server is burning too much error budget
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
+      expr: |-
+        sum(apiserver_request:burnrate1d) > (3.00 * 0.01000)
+        and
+        sum(apiserver_request:burnrate2h) > (3.00 * 0.01000)
+      for: 1h
+      labels:
+        severity: warning
+    - alert: KubeAPIErrorBudgetBurn
+      annotations:
+        message: The API server is burning too much error budget
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorbudgetburn
+      expr: |-
+        sum(apiserver_request:burnrate3d) > (1.00 * 0.01000)
+        and
+        sum(apiserver_request:burnrate6h) > (1.00 * 0.01000)
+      for: 3h
+      labels:
+        severity: warning

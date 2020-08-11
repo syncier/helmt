@@ -1,0 +1,24 @@
+---
+# Source: prometheus-operator/templates/prometheus/rules-1.14/node-network.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: agent-prometheus-node-network
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  groups:
+  - name: node-network
+    rules:
+    - alert: NodeNetworkInterfaceFlapping
+      annotations:
+        message: Network interface "{{ $labels.device }}" changing it's up status often on node-exporter {{ $labels.namespace }}/{{ $labels.pod }}"
+      expr: changes(node_network_up{job="node-exporter",device!~"veth.+"}[2m]) > 2
+      for: 2m
+      labels:
+        severity: warning

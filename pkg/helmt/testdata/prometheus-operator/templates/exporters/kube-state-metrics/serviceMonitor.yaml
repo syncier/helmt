@@ -1,0 +1,22 @@
+---
+# Source: prometheus-operator/templates/exporters/kube-state-metrics/serviceMonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agent-prometheus-kube-state-metrics
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-kube-state-metrics
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  jobLabel: app.kubernetes.io/name
+  endpoints:
+  - port: http
+    honorLabels: true
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: "agent-prometheus"

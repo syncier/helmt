@@ -1,0 +1,30 @@
+---
+# Source: prometheus-operator/templates/alertmanager/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: agent-prometheus-alertmanager
+  namespace: infra-monitoring
+  annotations:
+    kubernetes.io/ingress.class: internal
+    nginx.ingress.kubernetes.io/auth-secret: infra-ingress/monitoring-ingress-basic-auth
+    nginx.ingress.kubernetes.io/auth-type: basic
+  labels:
+    app: prometheus-operator-alertmanager
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  rules:
+    - host: alertmanager.some.cluster
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: agent-prometheus-alertmanager
+              servicePort: 9093
+  tls:
+    - hosts:
+      - alertmanager.some.cluster
+      secretName: lets-encrypt-wildcard

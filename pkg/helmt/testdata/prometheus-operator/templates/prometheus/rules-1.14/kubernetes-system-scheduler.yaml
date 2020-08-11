@@ -1,0 +1,25 @@
+---
+# Source: prometheus-operator/templates/prometheus/rules-1.14/kubernetes-system-scheduler.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: agent-prometheus-kubernetes-system-scheduler
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  groups:
+  - name: kubernetes-system-scheduler
+    rules:
+    - alert: KubeSchedulerDown
+      annotations:
+        message: KubeScheduler has disappeared from Prometheus target discovery.
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeschedulerdown
+      expr: absent(up{job="kube-scheduler"} == 1)
+      for: 15m
+      labels:
+        severity: critical

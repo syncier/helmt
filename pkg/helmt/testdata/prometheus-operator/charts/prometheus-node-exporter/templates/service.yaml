@@ -1,0 +1,25 @@
+---
+# Source: prometheus-operator/charts/prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-prometheus-node-exporter
+  namespace: infra-monitoring
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: agent-prometheus
+    chart: prometheus-node-exporter-1.9.1
+    jobLabel: node-exporter
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app: prometheus-node-exporter
+    release: agent-prometheus

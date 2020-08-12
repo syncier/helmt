@@ -1,0 +1,24 @@
+---
+# Source: prometheus-operator/charts/grafana/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-grafana
+  namespace: infra-monitoring
+  labels:
+    helm.sh/chart: grafana-5.0.12
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: agent-prometheus
+    app.kubernetes.io/version: "6.7.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: service
+      port: 80
+      protocol: TCP
+      targetPort: 3000
+
+  selector:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: agent-prometheus

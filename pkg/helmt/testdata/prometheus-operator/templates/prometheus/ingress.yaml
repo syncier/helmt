@@ -1,0 +1,30 @@
+---
+# Source: prometheus-operator/templates/prometheus/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: internal
+    nginx.ingress.kubernetes.io/auth-secret: infra-ingress/monitoring-ingress-basic-auth
+    nginx.ingress.kubernetes.io/auth-type: basic
+  name: agent-prometheus-prometheus
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-prometheus
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  rules:
+    - host: prometheus.some.cluster
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: agent-prometheus-prometheus
+              servicePort: 9090
+  tls:
+    - hosts:
+      - prometheus.some.cluster
+      secretName: lets-encrypt-wildcard

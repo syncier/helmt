@@ -17,6 +17,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/syncier/helmt/cmd"
 )
@@ -24,8 +25,10 @@ import (
 var version, commit, date string
 
 func main() {
-
-	cmd.Execute(versionString())
+	err := cmd.Execute(versionString())
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 func versionString() string {

@@ -1,0 +1,21 @@
+---
+# Source: prometheus-operator/templates/alertmanager/psp-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-prometheus-alertmanager
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator-alertmanager
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-prometheus-alertmanager
+subjects:
+  - kind: ServiceAccount
+    name: agent-prometheus-alertmanager
+    namespace: infra-monitoring

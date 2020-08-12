@@ -1,0 +1,24 @@
+---
+# Source: jenkins/templates/jenkins-master-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: something-jenkins
+  namespace: default
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-2.0.0"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "something"
+    "app.kubernetes.io/component": "jenkins-master"
+spec:
+  
+  ports:
+    - port: 8080
+      name: http
+      targetPort: 8080
+      
+  selector:
+    "app.kubernetes.io/component": "jenkins-master"
+    "app.kubernetes.io/instance": "something"
+  type: ClusterIP

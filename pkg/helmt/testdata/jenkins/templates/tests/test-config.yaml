@@ -1,0 +1,12 @@
+---
+# Source: jenkins/templates/tests/test-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: something-jenkins-tests
+  namespace: default
+data:
+  run.sh: |-
+    @test "Testing Jenkins UI is accessible" {
+      curl --retry 48 --retry-delay 10 something-jenkins:8080/login
+    }

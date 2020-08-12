@@ -1,0 +1,25 @@
+---
+# Source: prometheus-operator/templates/prometheus/rules-1.14/kubernetes-system-controller-manager.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: agent-prometheus-kubernetes-system-controller-manager
+  namespace: infra-monitoring
+  labels:
+    app: prometheus-operator
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+spec:
+  groups:
+  - name: kubernetes-system-controller-manager
+    rules:
+    - alert: KubeControllerManagerDown
+      annotations:
+        message: KubeControllerManager has disappeared from Prometheus target discovery.
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubecontrollermanagerdown
+      expr: absent(up{job="kube-controller-manager"} == 1)
+      for: 15m
+      labels:
+        severity: critical

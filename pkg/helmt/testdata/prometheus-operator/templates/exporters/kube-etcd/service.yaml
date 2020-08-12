@@ -1,0 +1,24 @@
+---
+# Source: prometheus-operator/templates/exporters/kube-etcd/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-prometheus-kube-etcd
+  labels:
+    app: prometheus-operator-kube-etcd
+    jobLabel: kube-etcd
+    
+    chart: prometheus-operator-8.12.15
+    release: "agent-prometheus"
+    heritage: "Helm"
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 2381
+      protocol: TCP
+      targetPort: 2381
+  selector:
+    component: etcd
+  type: ClusterIP

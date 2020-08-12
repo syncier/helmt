@@ -1,0 +1,23 @@
+---
+# Source: jenkins/templates/jenkins-agent-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: something-jenkins-agent
+  namespace: default
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "helm.sh/chart": "jenkins-2.0.0"
+    "app.kubernetes.io/managed-by": "Helm"
+    "app.kubernetes.io/instance": "something"
+    "app.kubernetes.io/component": "jenkins-master"
+spec:
+  ports:
+    - port: 50000
+      targetPort: 50000
+      
+      name: slavelistener
+  selector:
+    "app.kubernetes.io/component": "jenkins-master"
+    "app.kubernetes.io/instance": "something"
+  type: ClusterIP

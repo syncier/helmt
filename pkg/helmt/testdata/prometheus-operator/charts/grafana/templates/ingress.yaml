@@ -1,0 +1,29 @@
+---
+# Source: prometheus-operator/charts/grafana/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: agent-prometheus-grafana
+  namespace: infra-monitoring
+  labels:
+    helm.sh/chart: grafana-5.0.12
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: agent-prometheus
+    app.kubernetes.io/version: "6.7.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    kubernetes.io/ingress.class: internal
+spec:
+  tls:
+    - hosts:
+      - grafana.some.cluster
+      secretName: lets-encrypt-wildcard
+  rules:
+    - host: grafana.some.cluster
+      http:
+        paths:
+
+          - path: /
+            backend:
+              serviceName: agent-prometheus-grafana
+              servicePort: 80

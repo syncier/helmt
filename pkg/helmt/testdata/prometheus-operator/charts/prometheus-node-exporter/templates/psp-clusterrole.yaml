@@ -1,0 +1,18 @@
+---
+# Source: prometheus-operator/charts/prometheus-node-exporter/templates/psp-clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp-agent-prometheus-prometheus-node-exporter
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: agent-prometheus
+    chart: prometheus-node-exporter-1.9.1
+    jobLabel: node-exporter
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - agent-prometheus-prometheus-node-exporter

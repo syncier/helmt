@@ -25,7 +25,6 @@ import (
 	"github.com/syncier/helmt/pkg/helmt"
 )
 
-var cfgFile string
 var clean bool
 
 var rootCmd = &cobra.Command{
@@ -67,18 +66,21 @@ func Execute(version string) error {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	var cfgFile string
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
+	cobra.OnInitialize(func() {
+		initConfig(cfgFile)
+	})
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
+func initConfig(cfgFile string) {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)

@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -64,9 +63,4 @@ func copyFileToDirectory(t *testing.T, files []string, dir string) {
 		err = ioutil.WriteFile(filepath.Join(dir, file), data, 0644)
 		assert.NoError(t, err)
 	}
-}
-
-func TestGetFilename(t *testing.T) {
-	_, filename, _, _ := runtime.Caller(0)
-	t.Logf("Current test filename: %s", filename)
 }

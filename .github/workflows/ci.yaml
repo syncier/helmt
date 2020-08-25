@@ -1,6 +1,5 @@
 name: CI build
 on:
-  push:
   pull_request:
 jobs:
   ci:

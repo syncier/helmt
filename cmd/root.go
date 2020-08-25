@@ -25,12 +25,14 @@ import (
 	"github.com/syncier/helmt/pkg/helmt"
 )
 
-var clean bool
+func NewHelmtCommand(version string) *cobra.Command {
+	var cfgFile string
+	var clean bool
 
-var rootCmd = &cobra.Command{
-	Use:   "helmt <filename>",
-	Short: "A simple wrapper around helm template",
-	Long: `A simple wrapper around helm template
+	cmd := &cobra.Command{
+		Use:   "helmt <filename>",
+		Short: "A simple wrapper around helm template",
+		Long: `A simple wrapper around helm template
 It expects a filename which contains all necessary information:
 
 chart: jenkins
@@ -46,37 +48,26 @@ postProcess:
 
 namespace, values, skipCRDs and postProcess are optional
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		filename := "helm-chart.yaml"
+		RunE: func(cmd *cobra.Command, args []string) error {
+			filename := "helm-chart.yaml"
 
-		if len(args) == 1 {
-			filename = args[0]
-		}
-		fmt.Printf("templating '%s'\n", filename)
+			if len(args) == 1 {
+				filename = args[0]
+			}
+			fmt.Printf("templating '%s'\n", filename)
 
-		return helmt.HelmTemplate(filename, clean)
-	},
-}
+			return helmt.HelmTemplate(filename, clean)
+		},
+		Version: version,
+	}
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(version string) error {
-	rootCmd.Version = version
-	return rootCmd.Execute()
-}
-
-func init() {
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	var cfgFile string
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
+	cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
+	cmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
 	cobra.OnInitialize(func() {
 		initConfig(cfgFile)
 	})
+
+	return cmd
 }
 
 // initConfig reads in config file and ENV variables if set.

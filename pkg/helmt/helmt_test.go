@@ -1,13 +1,14 @@
 package helmt
 
 import (
-	"github.com/otiai10/copy"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/otiai10/copy"
 
 	assert "github.com/stretchr/testify/assert"
 )
@@ -132,6 +133,8 @@ func Test_readParameters(t *testing.T) {
 				Namespace:  "jenkins",
 				Name:       "jenkins",
 				Values:     []string{"values1.yaml", "values2.yaml"},
+				SkipCRDs:   false,
+				SkipHooks:  false,
 			},
 		},
 		{
@@ -230,6 +233,19 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
 				"helm template something jenkins-2.1.0.tgz --output-dir .",
+			},
+			wantRemoveOutput: true,
+		},
+		{
+			name: "skip hooks",
+			args: args{
+				filename: "testdata/helm-chart-skip-hooks.yaml",
+				clean:    true,
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
+				"helm template something jenkins-2.1.0.tgz --include-crds --no-hooks --output-dir .",
 			},
 			wantRemoveOutput: true,
 		},

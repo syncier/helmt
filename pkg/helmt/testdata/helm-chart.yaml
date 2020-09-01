@@ -3,6 +3,8 @@ version: 5.6.0
 repository: https://hub.syncier.cloud/chartrepo/library
 name: jenkins
 namespace: jenkins
+skipCRDs: false
+skipHooks: false
 values:
   - values1.yaml
   - values2.yaml

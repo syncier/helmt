@@ -32,6 +32,7 @@ type HelmChart struct {
 	Namespace   string      `yaml:"namespace"`
 	Values      []string    `yaml:"values"`
 	SkipCRDs    bool        `yaml:"skipCRDs"`
+	SkipHooks   bool        `yaml:"skipHooks"`
 	PostProcess PostProcess `yaml:"postProcess"`
 }
 
@@ -81,7 +82,7 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs)
+	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs, chart.SkipHooks)
 	if err != nil {
 		return err
 	}
@@ -98,13 +99,16 @@ func HelmVersion() error {
 	return execute("helm", "version")
 }
 
-func template(name string, chart string, values []string, namespace string, skipCRDs bool) error {
+func template(name string, chart string, values []string, namespace string, skipCRDs bool, skipHooks bool) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
 	}
 	if !skipCRDs {
 		args = append(args, "--include-crds")
+	}
+	if skipHooks {
+		args = append(args, "--no-hooks")
 	}
 	for _, valuesfile := range values {
 		args = append(args, "--values", valuesfile)

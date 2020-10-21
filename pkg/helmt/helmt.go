@@ -33,6 +33,7 @@ type HelmChart struct {
 	Values      []string    `yaml:"values"`
 	SkipCRDs    bool        `yaml:"skipCRDs"`
 	PostProcess PostProcess `yaml:"postProcess"`
+	OutputDir   string      `yaml:"outputDir"`
 }
 
 type PostProcess struct {
@@ -81,7 +82,7 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs)
+	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir)
 	if err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func HelmVersion() error {
 	return execute("helm", "version")
 }
 
-func template(name string, chart string, values []string, namespace string, skipCRDs bool) error {
+func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
@@ -109,8 +110,11 @@ func template(name string, chart string, values []string, namespace string, skip
 	for _, valuesfile := range values {
 		args = append(args, "--values", valuesfile)
 	}
-
-	args = append(args, "--output-dir", ".")
+	if len(outputDir) > 0 {
+		args = append(args, "--output-dir", outputDir)
+	} else {
+		args = append(args, "--output-dir", ".")
+	}
 
 	return execute("helm", args...)
 }

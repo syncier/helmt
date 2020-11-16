@@ -21,7 +21,7 @@ type testExecutor struct {
 	t        *testing.T
 }
 
-func (e *testExecutor) execCommand(name string, arg ...string) error {
+func (e *testExecutor) execCommand(name string, opts execOpts, arg ...string) error {
 	e.commands = append(e.commands, strings.Join(append([]string{name}, arg...), " "))
 	return nil
 }
@@ -186,6 +186,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
 				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0",
 			},
 		},
 		{
@@ -197,6 +198,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
 				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir .",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 		},
 		{
@@ -217,6 +219,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
 				"helm template something jenkins-2.0.0.tgz --include-crds --output-dir .",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0",
 			},
 			wantRemoveOutput: true,
 		},
@@ -230,6 +233,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
 				"helm template something jenkins-2.1.0.tgz --output-dir .",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0",
 			},
 			wantRemoveOutput: true,
 		},
@@ -243,6 +247,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15 prometheus-operator",
 				"helm template agent-prometheus prometheus-operator-8.12.15.tgz --namespace infra-monitoring --include-crds --values prometheus-operator-values.yaml --output-dir .",
+				"helm show chart prometheus-operator --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15",
 			},
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: true,
@@ -257,6 +262,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
 				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir manifests",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,

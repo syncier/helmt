@@ -152,7 +152,7 @@ func downloadChartMetadata(chart string, repo string, version string, outputDir 
 }
 
 type execOpts struct {
-	Dir string
+	Dir    string
 	Output io.Writer
 }
 

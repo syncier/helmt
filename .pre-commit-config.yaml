@@ -11,7 +11,7 @@ repos:
         args: ["--allow-multiple-documents"]
       - id: end-of-file-fixer
   - repo: https://github.com/prettier/prettier
-    rev: 1.19.1
+    rev: 2.1.2
     hooks:
       - id: prettier
         args: ["--prose-wrap", "preserve"]

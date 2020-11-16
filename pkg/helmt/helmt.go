@@ -1,7 +1,9 @@
 package helmt
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -86,17 +88,24 @@ func HelmTemplate(filename string, clean bool) error {
 	if err != nil {
 		return err
 	}
+
 	if chart.PostProcess.GenerateKustomization {
 		err = generateKustomization(chart.Chart)
 		if err != nil {
 			return err
 		}
 	}
+
+	err = downloadChartMetadata(chart.Chart, chart.Repository, chart.Version, chart.OutputDir)
+	if err != nil {
+		println(fmt.Sprintf("Warning: Could not retrieve Chart.yaml (%v)", err))
+	}
+
 	return nil
 }
 
 func HelmVersion() error {
-	return execute("helm", "version")
+	return execute("helm", execOpts{}, "version")
 }
 
 func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string) error {
@@ -116,17 +125,46 @@ func template(name string, chart string, values []string, namespace string, skip
 		args = append(args, "--output-dir", ".")
 	}
 
-	return execute("helm", args...)
+	return execute("helm", execOpts{}, args...)
 }
 
 func fetch(repository, chart, version string) error {
-	return execute("helm", "fetch", "--repo", repository, "--version", version, chart)
+	return execute("helm", execOpts{}, "fetch", "--repo", repository, "--version", version, chart)
 }
 
-func execCommand(name string, arg ...string) error {
+func downloadChartMetadata(chart string, repo string, version string, outputDir string) error {
+	args := []string{"show", "chart", chart, "--repo", repo, "--version", version}
+
+	output := &bytes.Buffer{}
+	// Due to https://github.com/helm/helm/issues/6864 we have to run the command in another directory.
+	// Otherwise the local directory with the chart name will be taken by helm, instead of downloading from the remote repo.
+	err := execute("helm", execOpts{Dir: os.TempDir(), Output: output}, args...)
+	if err != nil {
+		return err
+	}
+
+	targetPath := filepath.Join(chart, "Chart.yaml")
+	if len(outputDir) > 0 {
+		targetPath = filepath.Join(outputDir, targetPath)
+	}
+
+	return ioutil.WriteFile(targetPath, output.Bytes(), os.ModePerm)
+}
+
+type execOpts struct {
+	Dir    string
+	Output io.Writer
+}
+
+func execCommand(name string, opts execOpts, arg ...string) error {
 	color.Magenta("%s %s", name, strings.Join(arg, " "))
 	command := exec.Command(name, arg...)
-	command.Stdout = Output
+	command.Dir = opts.Dir
+	if opts.Output != nil {
+		command.Stdout = opts.Output
+	} else {
+		command.Stdout = Output
+	}
 	command.Stderr = Error
 	return command.Run()
 }

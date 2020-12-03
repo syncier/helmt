@@ -276,7 +276,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
-				"helm version", "helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins", "helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
+				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
 				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 			wantRemoveOutput:          true,

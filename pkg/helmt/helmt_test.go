@@ -149,21 +149,6 @@ func Test_readParameters(t *testing.T) {
 				PostProcess: PostProcess{GenerateKustomization: true},
 			},
 		},
-		{
-			name: "apiVersions check",
-			args: args{
-				filename: "testdata/helm-chart-api-versions.yaml",
-			},
-			want: &HelmChart{
-				Chart:       "syncier-jenkins",
-				Version:     "5.6.0",
-				Repository:  "https://hub.syncier.cloud/chartrepo/library",
-				Namespace:   "jenkins",
-				Name:        "jenkins",
-				Values:      []string{"values1.yaml", "values2.yaml"},
-				ApiVersions: []string{"monitoring.coreos.com/v1", "monitoring.coreos.com/v1alpha1"},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -126,8 +126,8 @@ func template(name string, chart string, values []string, namespace string, skip
 		args = append(args, "--output-dir", ".")
 	}
 	if len(apiVersions) > 0 {
-	for _, apiversions := range apiVersions {
-		args = append(args, "--api-versions", apiversions)
+		for _, apiversions := range apiVersions {
+			args = append(args, "--api-versions", apiversions)
 		}
 	}
 

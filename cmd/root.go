@@ -44,8 +44,10 @@ values:
 skipCRDs: false
 postProcess:
   generateKustomization: false
+apiVersions:
+  - "app/v1"
 
-namespace, values, skipCRDs and postProcess are optional
+namespace, values, skipCRDs apiVersions and postProcess are optional
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		filename := "helm-chart.yaml"

@@ -109,7 +109,7 @@ func HelmVersion() error {
 	return execute("helm", execOpts{}, "version")
 }
 
-func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string) error {
+func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string, apiVersions []string) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)

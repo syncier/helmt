@@ -7,5 +7,5 @@ values:
   - values1.yaml
   - values2.yaml
 apiVersions:
-  - "monitoring.coreos.com/v1"
-  - "monitoring.coreos.com/v1alpha1"
+  - monitoring.coreos.com/v1
+  - monitoring.coreos.com/v1alpha1

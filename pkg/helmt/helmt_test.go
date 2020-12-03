@@ -161,7 +161,7 @@ func Test_readParameters(t *testing.T) {
 				Namespace:   "jenkins",
 				Name:        "jenkins",
 				Values:      []string{"values1.yaml", "values2.yaml"},
-				apiVersions: []string{"monitoring.coreos.com/v1", "monitoring.coreos.com/v1alpha1"},
+				ApiVersions: []string{"monitoring.coreos.com/v1", "monitoring.coreos.com/v1alpha1"},
 			},
 		},
 	}

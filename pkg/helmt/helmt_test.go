@@ -267,6 +267,21 @@ func TestHelmTemplate(t *testing.T) {
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
 		},
+		{
+			name: "helm template with apiVersions in helm-chart.yaml",
+			args: args{
+				filename: "testdata/helm-chart-api-versions.yaml",
+				clean:    true,
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
+				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
+			},
+			wantRemoveOutput:          true,
+			wantGenerateKustomization: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

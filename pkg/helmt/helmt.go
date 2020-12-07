@@ -36,6 +36,7 @@ type HelmChart struct {
 	SkipCRDs    bool        `yaml:"skipCRDs"`
 	PostProcess PostProcess `yaml:"postProcess"`
 	OutputDir   string      `yaml:"outputDir"`
+	ApiVersions []string    `yaml:"apiVersions"`
 }
 
 type PostProcess struct {
@@ -84,7 +85,7 @@ func HelmTemplate(filename string, clean bool) error {
 	}
 
 	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir)
+	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir, chart.ApiVersions)
 	if err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func HelmVersion() error {
 	return execute("helm", execOpts{}, "version")
 }
 
-func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string) error {
+func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string, ApiVersions []string) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
@@ -123,6 +124,11 @@ func template(name string, chart string, values []string, namespace string, skip
 		args = append(args, "--output-dir", outputDir)
 	} else {
 		args = append(args, "--output-dir", ".")
+	}
+	if len(ApiVersions) > 0 {
+		for _, apiversion := range ApiVersions {
+			args = append(args, "--api-versions", apiversion)
+		}
 	}
 
 	return execute("helm", execOpts{}, args...)

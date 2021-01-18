@@ -1,0 +1,5 @@
+chart: jenkins
+version: 2.1.0
+repository: https://kubernetes-charts.storage.googleapis.com
+name: something
+skipTests: true

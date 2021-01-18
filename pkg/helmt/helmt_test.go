@@ -238,6 +238,20 @@ func TestHelmTemplate(t *testing.T) {
 			wantRemoveOutput: true,
 		},
 		{
+			name: "skip tests",
+			args: args{
+				filename: "testdata/helm-chart-skip-tests.yaml",
+				clean:    true,
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
+				"helm template something jenkins-2.1.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0",
+			},
+			wantRemoveOutput: true,
+		},
+		{
 			name: "generate kustomization",
 			args: args{
 				filename: "testdata/helm-chart-prometheus-operator.yaml",

@@ -117,6 +117,7 @@ func template(name string, chart string, values []string, namespace string, skip
 	if !skipCRDs {
 		args = append(args, "--include-crds")
 	}
+	args = append(args, "--skip-tests")
 	for _, valuesfile := range values {
 		args = append(args, "--values", valuesfile)
 	}

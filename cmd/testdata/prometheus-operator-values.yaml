@@ -1,0 +1,135 @@
+additionalPrometheusRulesMap:
+  - groups:
+      - name: extra_alerts
+        rules:
+          - alert: KubePersistentVolumeUsageCritical
+            annotations:
+              message:
+                The PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                }} in Namespace {{ $labels.namespace }} is only {{ $value | humanizePercentage
+                }} free.
+              runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumeusagecritical
+            expr:
+              kubelet_volume_stats_available_bytes{job="kubelet",metrics_path="/metrics",namespace=~".*"}
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",metrics_path="/metrics",namespace=~".*"}
+              < 0.03
+            for: 1h
+            labels:
+              severity: critical
+          - alert: NodeFilesystemAlmostOutOfSpace
+            annotations:
+              description:
+                Filesystem on {{ $labels.device }} at {{ $labels.instance }}
+                has only {{ printf "%.2f" $value }}% available space left.
+              runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-nodefilesystemalmostoutofspace
+            expr:
+              (node_filesystem_avail_bytes{fstype!="",job="node-exporter"} / node_filesystem_size_bytes{fstype!="",job="node-exporter"}
+              * 100 < 20 and node_filesystem_readonly{fstype!="",job="node-exporter"})
+            for: 1h
+            labels:
+              severity: critical
+alertmanager:
+  alertmanagerSpec:
+    configSecret: alertmanager-config
+    priorityClassName: infrastructure-critical
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: internal
+      nginx.ingress.kubernetes.io/auth-secret: infra-ingress/monitoring-ingress-basic-auth
+      nginx.ingress.kubernetes.io/auth-type: basic
+    enabled: true
+    hosts:
+      - alertmanager.some.cluster
+    tls:
+      - hosts:
+          - alertmanager.some.cluster
+        secretName: lets-encrypt-wildcard
+defaultRules:
+  create: true
+fullnameOverride: agent-prometheus
+grafana:
+  admin:
+    existingSecret: grafana-admin-credentials
+  defaultDashboardsEnabled: true
+  env:
+    https_proxy: http://proxy.somewhere:3128
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: internal
+    enabled: true
+    hosts:
+      - grafana.some.cluster
+    tls:
+      - hosts:
+          - grafana.some.cluster
+        secretName: lets-encrypt-wildcard
+  plugins:
+    - grafana-piechart-panel
+kubeControllerManager:
+  enabled: true
+  service:
+    selector:
+      k8s-app: kube-controller-manager
+kubeEtcd:
+  service:
+    port: 2381
+    targetPort: 2381
+kubeProxy:
+  enabled: true
+  service:
+    selector:
+      k8s-app: kube-proxy
+kubeScheduler:
+  enabled: true
+  service:
+    selector:
+      k8s-app: kube-scheduler
+prometheus:
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: internal
+      nginx.ingress.kubernetes.io/auth-secret: infra-ingress/monitoring-ingress-basic-auth
+      nginx.ingress.kubernetes.io/auth-type: basic
+    enabled: true
+    hosts:
+      - prometheus.some.cluster
+    tls:
+      - hosts:
+          - prometheus.some.cluster
+        secretName: lets-encrypt-wildcard
+  prometheusSpec:
+    externalLabels:
+      cluster: dev
+    image:
+      tag: v2.19.1
+    podMonitorSelector: {}
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      limits:
+        memory: 8Gi
+      requests:
+        memory: 8Gi
+    retention: 10d
+    retentionSize: 25GB
+    ruleSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 30Gi
+          storageClassName: gp2
+prometheus-node-exporter:
+  priorityClassName: infrastructure-critical
+prometheusOperator:
+  admissionWebhooksPatch:
+    priorityClassName: infrastructure-critical
+  enabled: true
+  kubeletService:
+    enabled: true
+  priorityClassName: infrastructure-critical

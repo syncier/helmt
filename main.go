@@ -25,7 +25,8 @@ import (
 var version, commit, date string
 
 func main() {
-	err := cmd.Execute(versionString())
+	err := cmd.NewHelmtCommand(versionString()).Execute()
+
 	if err != nil {
 		os.Exit(1)
 	}

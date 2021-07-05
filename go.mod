@@ -3,7 +3,7 @@ module github.com/syncier/helmt
 go 1.16
 
 require (
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.12.0
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/otiai10/copy v1.5.1

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0
+    rev: v4.0.1
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
@@ -10,12 +10,12 @@ repos:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
       - id: end-of-file-fixer
-  - repo: https://github.com/prettier/prettier
-    rev: 2.1.2
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.3.2
     hooks:
       - id: prettier
         args: ["--prose-wrap", "preserve"]
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.27.0
+    rev: v1.41.1
     hooks:
       - id: golangci-lint

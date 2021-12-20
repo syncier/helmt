@@ -7,10 +7,12 @@ Usage:
   helmt <filename> [flags]
 
 Flags:
-      --clean           delete existing templates before rendering
-      --config string   config file (default is $HOME/.helmt.yaml)
-  -h, --help            help for helmt
-  -v, --version         version for helmt
+      --clean             delete existing templates before rendering
+      --config string     config file (default is $HOME/.helmt.yaml)
+  -h, --help              help for helmt
+      --password string   optional password for chart repository
+      --username string   optional username for chart repository
+  -v, --version           version for helmt
 ```
 
 ## Example
@@ -58,3 +60,5 @@ wrote ./jenkins/templates/jenkins-agent-svc.yaml
 wrote ./jenkins/templates/jenkins-master-svc.yaml
 wrote ./jenkins/templates/jenkins-master-deployment.yaml
 ```
+
+If the chart repository needs authentication, provide credentials via `--username` and `--password`.

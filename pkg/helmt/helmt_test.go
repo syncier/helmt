@@ -1,7 +1,6 @@
 package helmt
 
 import (
-	"github.com/otiai10/copy"
 	"io/ioutil"
 	"os"
 	"path"
@@ -9,7 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	assert "github.com/stretchr/testify/assert"
+	"github.com/otiai10/copy"
+	"github.com/stretchr/testify/assert"
 )
 
 func NewTestExecutor(t *testing.T) *testExecutor {
@@ -62,7 +62,7 @@ func Test_readParameters(t *testing.T) {
 		{
 			name: "empty file",
 			args: args{
-				filename: "tstdata/empty.yaml",
+				filename: "testdata/empty.yaml",
 			},
 			want:    nil,
 			wantErr: true,
@@ -168,6 +168,8 @@ func TestHelmTemplate(t *testing.T) {
 	type args struct {
 		filename string
 		clean    bool
+		username string
+		password string
 	}
 	tests := []struct {
 		name                      string
@@ -275,6 +277,19 @@ func TestHelmTemplate(t *testing.T) {
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
 		},
+		{
+			name: "helm template with credentials",
+			args: args{
+				filename: "testdata/helm-chart-mandatory-parameters.yaml",
+				username: "user",
+				password: "pass",
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --username user --password pass jenkins",
+				"helm template something jenkins-2.0.0.tgz --include-crds --skip-tests --output-dir .",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -292,7 +307,7 @@ func TestHelmTemplate(t *testing.T) {
 				return nil
 			}
 
-			if err := HelmTemplate(tt.args.filename, tt.args.clean); (err != nil) != tt.wantErr {
+			if err := HelmTemplate(tt.args.filename, tt.args.clean, tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
 				t.Errorf("HelmTemplate() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				assert.EqualValues(t, tt.expectedCommands, executor.commands)

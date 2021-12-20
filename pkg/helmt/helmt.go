@@ -60,7 +60,7 @@ func readParameters(filename string) (*HelmChart, error) {
 	return chart, nil
 }
 
-func HelmTemplate(filename string, clean bool) error {
+func HelmTemplate(filename string, clean bool, username, password string) error {
 	chart, err := readParameters(filename)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func HelmTemplate(filename string, clean bool) error {
 		return err
 	}
 
-	err = fetch(chart.Repository, chart.Chart, chart.Version)
+	err = fetch(chart.Repository, chart.Chart, chart.Version, username, password)
 	if err != nil {
 		return err
 	}
@@ -129,8 +129,18 @@ func template(name string, chart string, values []string, namespace string, skip
 	return execute("helm", execOpts{}, args...)
 }
 
-func fetch(repository, chart, version string) error {
-	return execute("helm", execOpts{}, "fetch", "--repo", repository, "--version", version, chart)
+func fetch(repository, chart, version string, username, password string) error {
+	args := []string{"fetch"}
+	args = append(args, "--repo", repository)
+	args = append(args, "--version", version)
+	if username != "" {
+		args = append(args, "--username", username)
+	}
+	if password != "" {
+		args = append(args, "--password", password)
+	}
+	args = append(args, chart)
+	return execute("helm", execOpts{}, args...)
 }
 
 type execOpts struct {

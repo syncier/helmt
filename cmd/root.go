@@ -19,14 +19,18 @@ import (
 	"fmt"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/syncier/helmt/pkg/helmt"
 )
 
-var cfgFile string
-var clean bool
+var (
+	cfgFile  string
+	clean    bool
+	username string
+	password string
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "helmt <filename>",
@@ -57,7 +61,7 @@ namespace, values, skipCRDs apiVersions and postProcess are optional
 		}
 		fmt.Printf("templating '%s'\n", filename)
 
-		return helmt.HelmTemplate(filename, clean)
+		return helmt.HelmTemplate(filename, clean, username, password)
 	},
 }
 
@@ -71,12 +75,10 @@ func Execute(version string) error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
+	rootCmd.PersistentFlags().StringVar(&username, "username", "", "optional username for chart repository")
+	rootCmd.PersistentFlags().StringVar(&password, "password", "", "optional password for chart repository")
 }
 
 // initConfig reads in config file and ENV variables if set.

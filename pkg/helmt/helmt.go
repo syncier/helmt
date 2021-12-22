@@ -12,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-playground/validator/v10"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
 
@@ -149,7 +150,10 @@ type execOpts struct {
 }
 
 func execCommand(name string, opts execOpts, arg ...string) error {
-	color.Magenta("%s %s", name, strings.Join(arg, " "))
+	args := strings.Join(arg, " ")
+	args = strings.ReplaceAll(args, "--password "+viper.GetString("password"), "--password *****")
+	color.Magenta("%s %s", name, args)
+
 	command := exec.Command(name, arg...)
 	command.Dir = opts.Dir
 	if opts.Output != nil {

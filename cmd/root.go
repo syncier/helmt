@@ -25,11 +25,11 @@ import (
 	"github.com/syncier/helmt/pkg/helmt"
 )
 
-var (
-	cfgFile  string
-	clean    bool
-	username string
-	password string
+const (
+	configFlag   = "config"
+	cleanFlag    = "clean"
+	usernameFlag = "username"
+	passwordFlag = "password"
 )
 
 var rootCmd = &cobra.Command{
@@ -61,6 +61,9 @@ namespace, values, skipCRDs apiVersions and postProcess are optional
 		}
 		fmt.Printf("templating '%s'\n", filename)
 
+		clean := viper.GetBool(cleanFlag)
+		username := viper.GetString(usernameFlag)
+		password := viper.GetString(passwordFlag)
 		return helmt.HelmTemplate(filename, clean, username, password)
 	},
 }
@@ -75,17 +78,19 @@ func Execute(version string) error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helmt.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&clean, "clean", false, "delete existing templates before rendering")
-	rootCmd.PersistentFlags().StringVar(&username, "username", "", "optional username for chart repository")
-	rootCmd.PersistentFlags().StringVar(&password, "password", "", "optional password for chart repository")
+	rootCmd.PersistentFlags().String(configFlag, "", "config file (default is $HOME/.helmt.yaml)")
+	rootCmd.PersistentFlags().Bool(cleanFlag, false, "delete existing templates before rendering")
+	rootCmd.PersistentFlags().StringP(usernameFlag, "u", "", "optional username for chart repository")
+	rootCmd.PersistentFlags().StringP(passwordFlag, "p", "", "optional password for chart repository")
+
+	viper.BindPFlags(rootCmd.PersistentFlags())
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
+	if viper.IsSet("config") {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(viper.GetString("config"))
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
@@ -99,6 +104,7 @@ func initConfig() {
 		viper.SetConfigName(".helmt")
 	}
 
+	viper.SetEnvPrefix("helmt")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.

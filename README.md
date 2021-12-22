@@ -10,10 +10,32 @@ Flags:
       --clean             delete existing templates before rendering
       --config string     config file (default is $HOME/.helmt.yaml)
   -h, --help              help for helmt
-      --password string   optional password for chart repository
-      --username string   optional username for chart repository
+  -p, --password string   optional password for chart repository
+  -u, --username string   optional username for chart repository
   -v, --version           version for helmt
 ```
+
+## Flags, environment variables and config file
+
+The following flags can also be set via environment variables.
+But command line parameters have always precedence.
+
+| Flag     | Environment variable |
+|----------|----------------------|
+| clean    | `HELMT_CLEAN`        |
+| config   | `HELMT_CONFIG`       |
+| username | `HELMT_USERNAME`     |
+| password | `HELMT_PASSWORD`     |
+
+The config is a simple yaml file with the names of the flags as keys.
+Example:
+
+```yaml
+clean: true
+username: anonymous
+```
+
+Please note that environment variables and command line parameters overwrite these settings.
 
 ## Example
 
@@ -61,4 +83,4 @@ wrote ./jenkins/templates/jenkins-master-svc.yaml
 wrote ./jenkins/templates/jenkins-master-deployment.yaml
 ```
 
-If the chart repository needs authentication, provide credentials via `--username` and `--password`.
+If the chart repository needs authentication, provide credentials via `--username` and `--password` or environment variables.

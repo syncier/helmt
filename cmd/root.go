@@ -83,7 +83,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP(usernameFlag, "u", "", "optional username for chart repository")
 	rootCmd.PersistentFlags().StringP(passwordFlag, "p", "", "optional password for chart repository")
 
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	err := viper.BindPFlags(rootCmd.PersistentFlags())
+	if err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

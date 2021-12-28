@@ -1,6 +1,9 @@
 package helmt
 
 import (
+	"fmt"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path"
@@ -172,36 +175,39 @@ func TestHelmTemplate(t *testing.T) {
 	}
 	tests := []struct {
 		name                      string
+		releaseName               string
 		args                      args
 		expectedCommands          []string
-		wantRemoveOutput          bool
 		wantGenerateKustomization bool
 		wantErr                   bool
 	}{
 		{
-			name: "helm template without values",
+			name:        "helm template without values",
+			releaseName: "jenkins",
 			args: args{
 				filename: "testdata/helm-chart-mandatory-parameters.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 jenkins",
-				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir /temp/helmt-123",
 			},
 		},
 		{
-			name: "helm template with namespace and release",
+			name:        "helm template with namespace and release",
+			releaseName: "syncier-jenkins",
 			args: args{
 				filename: "testdata/helm-chart.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
-				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir .",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123",
 			},
 		},
 		{
-			name: "helm template with namespace and release",
+			name:        "helm template with namespace and release",
+			releaseName: "jenkins",
 			args: args{
 				filename: "testdata/helm-chart-missing-release.yaml",
 			},
@@ -209,58 +215,59 @@ func TestHelmTemplate(t *testing.T) {
 			wantErr:          true,
 		},
 		{
-			name: "skip crds",
+			name:        "skip crds",
+			releaseName: "jenkins",
 			args: args{
 				filename: "testdata/helm-chart-skip-crds.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 --destination /temp/helmt-123 jenkins",
-				"helm template something /temp/helmt-123/chart-1.0.0.tgz --skip-tests --output-dir .",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --skip-tests --output-dir /temp/helmt-123",
 			},
-			wantRemoveOutput: true,
 		},
 		{
-			name: "generate kustomization",
+			name:        "generate kustomization",
+			releaseName: "prometheus-operator",
 			args: args{
 				filename: "testdata/helm-chart-prometheus-operator.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15 --destination /temp/helmt-123 prometheus-operator",
-				"helm template agent-prometheus /temp/helmt-123/chart-1.0.0.tgz --namespace infra-monitoring --include-crds --skip-tests --values prometheus-operator-values.yaml --output-dir .",
+				"helm template agent-prometheus /temp/helmt-123/chart-1.0.0.tgz --namespace infra-monitoring --include-crds --skip-tests --values prometheus-operator-values.yaml --output-dir /temp/helmt-123",
 			},
-			wantRemoveOutput:          true,
 			wantGenerateKustomization: true,
 		},
 		{
-			name: "helm template outputDir in helm-chart.yaml",
+			name:        "helm template outputDir in helm-chart.yaml",
+			releaseName: "syncier-jenkins",
 			args: args{
 				filename: "testdata/helm-chart-output-dir.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
-				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir manifests",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123",
 			},
-			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
 		},
 		{
-			name: "helm template with apiVersions in helm-chart.yaml",
+			name:        "helm template with apiVersions in helm-chart.yaml",
+			releaseName: "syncier-jenkins",
 			args: args{
 				filename: "testdata/helm-chart-api-versions.yaml",
 			},
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
-				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123 --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
 			},
-			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
 		},
 		{
-			name: "helm template with credentials",
+			name:        "helm template with credentials",
+			releaseName: "jenkins",
 			args: args{
 				filename: "testdata/helm-chart-mandatory-parameters.yaml",
 				username: "user",
@@ -269,7 +276,7 @@ func TestHelmTemplate(t *testing.T) {
 			expectedCommands: []string{
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 --username user --password pass jenkins",
-				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir /temp/helmt-123",
 			},
 		},
 	}
@@ -277,29 +284,24 @@ func TestHelmTemplate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			executor := NewTestExecutor(t)
 			execute = executor.execCommand
-
-			outputRemoved := false
-			removeOutput = func(_ string) error {
-				outputRemoved = true
-				return nil
+			fs = afero.NewMemMapFs()
+			require.NoError(t, fs.Mkdir("/temp/helmt-123", os.ModePerm))
+			require.NoError(t, afero.WriteFile(fs, "/temp/helmt-123/chart-1.0.0.tgz", nil, os.ModePerm))
+			require.NoError(t, afero.WriteFile(fs, fmt.Sprintf("/temp/helmt-123/%s", tt.releaseName), nil, os.ModePerm))
+			TempDir = func(fs afero.Fs, dir, prefix string) (name string, err error) {
+				return "/temp/helmt-123", nil
 			}
+
 			kustomizationGenerated := false
 			generateKustomization = func(directory string) error {
 				kustomizationGenerated = true
 				return nil
-			}
-			dirContent = func(dir string) ([]string, error) {
-				return []string{"chart-1.0.0.tgz"}, nil
-			}
-			tempDir = func() (string, error) {
-				return "/temp/helmt-123", nil
 			}
 
 			if err := HelmTemplate(tt.args.filename, tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
 				t.Errorf("HelmTemplate() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				assert.EqualValues(t, tt.expectedCommands, executor.commands)
-				assert.Equal(t, tt.wantRemoveOutput, outputRemoved)
 				assert.Equal(t, tt.wantGenerateKustomization, kustomizationGenerated)
 			}
 		})
@@ -484,6 +486,7 @@ resources:
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			fs = afero.NewOsFs()
 			dir, err := ioutil.TempDir("", "kustomization")
 			assert.NoError(t, err)
 			err = copy.Copy(tt.args.directory, dir)
@@ -493,10 +496,8 @@ resources:
 				t.Errorf("generateKustomizationCommand() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			kustomization := path.Join(dir, "kustomization.yaml")
-			stat, err := os.Stat(kustomization)
-			if err != nil {
-				assert.FailNow(t, "kustomization.yaml was not generated")
-			}
+			stat, err := fs.Stat(kustomization)
+			require.NoError(t, err)
 
 			assert.False(t, stat.IsDir())
 			assert.Equal(t, tt.expectedContent, ReadFileAsString(t, kustomization))
@@ -505,7 +506,7 @@ resources:
 }
 
 func ReadFileAsString(t *testing.T, filename string) string {
-	expectedContent, err := ioutil.ReadFile(filename)
+	expectedContent, err := afero.ReadFile(fs, filename)
 	if err != nil {
 		assert.FailNow(t, err.Error())
 	}

@@ -2,6 +2,7 @@ package helmt
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"os"
@@ -20,12 +21,11 @@ var (
 	Output                = color.Output
 	Error                 = color.Error
 	execute               = execCommand
-	removeOutput          = removeOutputCommand
 	generateKustomization = generateKustomizationCommand
-	dirContent            = dirContentCommand
-	tempDir               = tempDirCommand
+	TempDir               = afero.TempDir
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
+	fs                           = afero.NewOsFs()
 )
 
 type HelmChart struct {
@@ -64,11 +64,11 @@ func readParameters(filename string) (*HelmChart, error) {
 }
 
 func HelmTemplate(filename, username, password string) error {
-	tmpDir, err := tempDir()
+	tmpDir, err := TempDir(fs, ".", "helmt")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary directory: %v", err)
 	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
+	defer func() { _ = fs.RemoveAll(tmpDir) }()
 
 	chart, err := readParameters(filename)
 	if err != nil {
@@ -105,12 +105,12 @@ func HelmTemplate(filename, username, password string) error {
 	}
 	target = filepath.Join(target, chart.Chart)
 
-	err = removeOutput(target)
+	err = fs.RemoveAll(target)
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(rendered, target)
+	err = fs.Rename(rendered, target)
 	if err != nil {
 		return fmt.Errorf("failed to move rendered chart: %v", err)
 	}
@@ -165,14 +165,10 @@ func fetch(tmpDir, repository, chart, version string, username, password string)
 		return "", err
 	}
 
-	content, err := dirContent(tmpDir)
+	result, err := findChartPackage(tmpDir)
 	if err != nil {
 		return "", err
 	}
-	if len(content) != 1 {
-		return "", fmt.Errorf("unexpected content in temporary directory %v", tmpDir)
-	}
-	result := content[0]
 	color.Magenta("downloaded %s", result)
 	return result, nil
 }
@@ -198,16 +194,12 @@ func execCommand(name string, opts execOpts, arg ...string) error {
 	return command.Run()
 }
 
-func removeOutputCommand(dir string) error {
-	return os.RemoveAll(dir)
-}
-
 func generateKustomizationCommand(directory string) error {
-	kustomization, err := os.Create(path.Join(directory, "kustomization.yaml"))
+	kustomization, err := fs.Create(path.Join(directory, "kustomization.yaml"))
 	if err != nil {
 		return err
 	}
-	defer kustomization.Close()
+	defer func() { _ = kustomization.Close() }()
 
 	_, err = kustomization.WriteString(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -217,7 +209,7 @@ resources:
 		return err
 	}
 
-	err = filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+	err = afero.Walk(fs, directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -242,18 +234,15 @@ resources:
 	return err
 }
 
-func dirContentCommand(dir string) ([]string, error) {
-	c, err := os.ReadDir(dir)
+func findChartPackage(dir string) (string, error) {
+	c, err := afero.ReadDir(fs, dir)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	var result []string
 	for _, f := range c {
-		result = append(result, f.Name())
+		if filepath.Ext(f.Name()) == ".tgz" {
+			return f.Name(), nil
+		}
 	}
-	return result, nil
-}
-
-func tempDirCommand() (string, error) {
-	return os.MkdirTemp(".", "helmt")
+	return "", fmt.Errorf("unexpected content in temporary directory %v", dir)
 }

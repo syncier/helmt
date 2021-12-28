@@ -167,7 +167,6 @@ func Test_readParameters(t *testing.T) {
 func TestHelmTemplate(t *testing.T) {
 	type args struct {
 		filename string
-		clean    bool
 		username string
 		password string
 	}
@@ -210,23 +209,9 @@ func TestHelmTemplate(t *testing.T) {
 			wantErr:          true,
 		},
 		{
-			name: "with clean flag",
-			args: args{
-				filename: "testdata/helm-chart-mandatory-parameters.yaml",
-				clean:    true,
-			},
-			expectedCommands: []string{
-				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 jenkins",
-				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
-			},
-			wantRemoveOutput: true,
-		},
-		{
 			name: "skip crds",
 			args: args{
 				filename: "testdata/helm-chart-skip-crds.yaml",
-				clean:    true,
 			},
 			expectedCommands: []string{
 				"helm version",
@@ -239,7 +224,6 @@ func TestHelmTemplate(t *testing.T) {
 			name: "generate kustomization",
 			args: args{
 				filename: "testdata/helm-chart-prometheus-operator.yaml",
-				clean:    true,
 			},
 			expectedCommands: []string{
 				"helm version",
@@ -253,7 +237,6 @@ func TestHelmTemplate(t *testing.T) {
 			name: "helm template outputDir in helm-chart.yaml",
 			args: args{
 				filename: "testdata/helm-chart-output-dir.yaml",
-				clean:    true,
 			},
 			expectedCommands: []string{
 				"helm version",
@@ -267,7 +250,6 @@ func TestHelmTemplate(t *testing.T) {
 			name: "helm template with apiVersions in helm-chart.yaml",
 			args: args{
 				filename: "testdata/helm-chart-api-versions.yaml",
-				clean:    true,
 			},
 			expectedCommands: []string{
 				"helm version",
@@ -297,7 +279,7 @@ func TestHelmTemplate(t *testing.T) {
 			execute = executor.execCommand
 
 			outputRemoved := false
-			removeOutput = func(_ *HelmChart) error {
+			removeOutput = func(_ string) error {
 				outputRemoved = true
 				return nil
 			}
@@ -313,7 +295,7 @@ func TestHelmTemplate(t *testing.T) {
 				return "/temp/helmt-123", nil
 			}
 
-			if err := HelmTemplate(tt.args.filename, tt.args.clean, tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
+			if err := HelmTemplate(tt.args.filename, tt.args.username, tt.args.password); (err != nil) != tt.wantErr {
 				t.Errorf("HelmTemplate() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				assert.EqualValues(t, tt.expectedCommands, executor.commands)

@@ -27,7 +27,6 @@ import (
 
 const (
 	configFlag   = "config"
-	cleanFlag    = "clean"
 	usernameFlag = "username"
 	passwordFlag = "password"
 )
@@ -61,10 +60,9 @@ namespace, values, skipCRDs apiVersions and postProcess are optional
 		}
 		fmt.Printf("templating '%s'\n", filename)
 
-		clean := viper.GetBool(cleanFlag)
 		username := viper.GetString(usernameFlag)
 		password := viper.GetString(passwordFlag)
-		return helmt.HelmTemplate(filename, clean, username, password)
+		return helmt.HelmTemplate(filename, username, password)
 	},
 }
 
@@ -79,7 +77,6 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String(configFlag, "", "config file (default is $HOME/.helmt.yaml)")
-	rootCmd.PersistentFlags().Bool(cleanFlag, false, "delete existing templates before rendering")
 	rootCmd.PersistentFlags().StringP(usernameFlag, "u", "", "optional username for chart repository")
 	rootCmd.PersistentFlags().StringP(passwordFlag, "p", "", "optional password for chart repository")
 

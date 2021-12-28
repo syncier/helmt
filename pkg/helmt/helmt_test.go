@@ -186,8 +186,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
-				"helm template something jenkins-2.0.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 jenkins",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
 			},
 		},
 		{
@@ -197,8 +197,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
-				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir .",
+				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir .",
 			},
 		},
 		{
@@ -217,8 +217,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 jenkins",
-				"helm template something jenkins-2.0.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 jenkins",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
 			},
 			wantRemoveOutput: true,
 		},
@@ -230,8 +230,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 jenkins",
-				"helm template something jenkins-2.1.0.tgz --skip-tests --output-dir .",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 --destination /temp/helmt-123 jenkins",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --skip-tests --output-dir .",
 			},
 			wantRemoveOutput: true,
 		},
@@ -243,8 +243,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15 prometheus-operator",
-				"helm template agent-prometheus prometheus-operator-8.12.15.tgz --namespace infra-monitoring --include-crds --skip-tests --values prometheus-operator-values.yaml --output-dir .",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15 --destination /temp/helmt-123 prometheus-operator",
+				"helm template agent-prometheus /temp/helmt-123/chart-1.0.0.tgz --namespace infra-monitoring --include-crds --skip-tests --values prometheus-operator-values.yaml --output-dir .",
 			},
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: true,
@@ -257,8 +257,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
-				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir manifests",
+				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir manifests",
 			},
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
@@ -271,8 +271,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 syncier-jenkins",
-				"helm template jenkins syncier-jenkins-5.6.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
+				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir . --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
 			},
 			wantRemoveOutput:          true,
 			wantGenerateKustomization: false,
@@ -286,8 +286,8 @@ func TestHelmTemplate(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"helm version",
-				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --username user --password pass jenkins",
-				"helm template something jenkins-2.0.0.tgz --include-crds --skip-tests --output-dir .",
+				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 --username user --password pass jenkins",
+				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir .",
 			},
 		},
 	}
@@ -305,6 +305,12 @@ func TestHelmTemplate(t *testing.T) {
 			generateKustomization = func(directory string) error {
 				kustomizationGenerated = true
 				return nil
+			}
+			dirContent = func(dir string) ([]string, error) {
+				return []string{"chart-1.0.0.tgz"}, nil
+			}
+			tempDir = func() (string, error) {
+				return "/temp/helmt-123", nil
 			}
 
 			if err := HelmTemplate(tt.args.filename, tt.args.clean, tt.args.username, tt.args.password); (err != nil) != tt.wantErr {

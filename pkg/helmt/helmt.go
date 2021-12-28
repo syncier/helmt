@@ -22,6 +22,8 @@ var (
 	execute               = execCommand
 	removeOutput          = removeOutputCommand
 	generateKustomization = generateKustomizationCommand
+	dirContent            = dirContentCommand
+	tempDir               = tempDirCommand
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
 )
@@ -72,7 +74,7 @@ func HelmTemplate(filename string, clean bool, username, password string) error 
 		return err
 	}
 
-	err = fetch(chart.Repository, chart.Chart, chart.Version, username, password)
+	chartFile, err := fetch(chart.Repository, chart.Chart, chart.Version, username, password)
 	if err != nil {
 		return err
 	}
@@ -84,8 +86,7 @@ func HelmTemplate(filename string, clean bool, username, password string) error 
 		}
 	}
 
-	chartVersion := fmt.Sprintf("%s-%s.tgz", chart.Chart, chart.Version)
-	err = template(chart.Name, chartVersion, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir, chart.ApiVersions)
+	err = template(chart.Name, chartFile, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir, chart.ApiVersions)
 	if err != nil {
 		return err
 	}
@@ -130,10 +131,16 @@ func template(name string, chart string, values []string, namespace string, skip
 	return execute("helm", execOpts{}, args...)
 }
 
-func fetch(repository, chart, version string, username, password string) error {
+func fetch(repository, chart, version string, username, password string) (string, error) {
+	d, err := tempDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to create temporary directory to download helm chart: %v", err)
+	}
+
 	args := []string{"fetch"}
 	args = append(args, "--repo", repository)
 	args = append(args, "--version", version)
+	args = append(args, "--destination", d)
 	if username != "" {
 		args = append(args, "--username", username)
 	}
@@ -141,7 +148,21 @@ func fetch(repository, chart, version string, username, password string) error {
 		args = append(args, "--password", password)
 	}
 	args = append(args, chart)
-	return execute("helm", execOpts{}, args...)
+	err = execute("helm", execOpts{}, args...)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := dirContent(d)
+	if err != nil {
+		return "", err
+	}
+	if len(content) != 1 {
+		return "", fmt.Errorf("unexpected content in temporary directory %v", d)
+	}
+	result := filepath.Join(d, content[0])
+	color.Magenta("downloaded %s", result)
+	return result, nil
 }
 
 type execOpts struct {
@@ -208,4 +229,20 @@ resources:
 	})
 
 	return err
+}
+
+func dirContentCommand(dir string) ([]string, error) {
+	c, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, f := range c {
+		result = append(result, f.Name())
+	}
+	return result, nil
+}
+
+func tempDirCommand() (string, error) {
+	return os.MkdirTemp("", "helmt")
 }

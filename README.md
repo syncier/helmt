@@ -7,7 +7,6 @@ Usage:
   helmt <filename> [flags]
 
 Flags:
-      --clean             delete existing templates before rendering
       --config string     config file (default is $HOME/.helmt.yaml)
   -h, --help              help for helmt
   -p, --password string   optional password for chart repository
@@ -21,8 +20,7 @@ The following flags can also be set via environment variables.
 But command line parameters have always precedence.
 
 | Flag     | Environment variable |
-|----------|----------------------|
-| clean    | `HELMT_CLEAN`        |
+| -------- | -------------------- |
 | config   | `HELMT_CONFIG`       |
 | username | `HELMT_USERNAME`     |
 | password | `HELMT_PASSWORD`     |
@@ -31,7 +29,6 @@ The config is a simple yaml file with the names of the flags as keys.
 Example:
 
 ```yaml
-clean: true
 username: anonymous
 ```
 

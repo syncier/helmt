@@ -2,6 +2,7 @@ package helmt
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"os"
@@ -20,12 +21,11 @@ var (
 	Output                = color.Output
 	Error                 = color.Error
 	execute               = execCommand
-	removeOutput          = removeOutputCommand
 	generateKustomization = generateKustomizationCommand
-	dirContent            = dirContentCommand
-	tempDir               = tempDirCommand
+	TempDir               = afero.TempDir
 	// use a single instance of Validate, it caches struct info
 	validate *validator.Validate = validator.New()
+	fs                           = afero.NewOsFs()
 )
 
 type HelmChart struct {
@@ -63,7 +63,13 @@ func readParameters(filename string) (*HelmChart, error) {
 	return chart, nil
 }
 
-func HelmTemplate(filename string, clean bool, username, password string) error {
+func HelmTemplate(filename, username, password string) error {
+	tmpDir, err := TempDir(fs, ".", "helmt")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary directory: %v", err)
+	}
+	defer func() { _ = fs.RemoveAll(tmpDir) }()
+
 	chart, err := readParameters(filename)
 	if err != nil {
 		return err
@@ -74,28 +80,39 @@ func HelmTemplate(filename string, clean bool, username, password string) error 
 		return err
 	}
 
-	chartFile, err := fetch(chart.Repository, chart.Chart, chart.Version, username, password)
+	chartFile, err := fetch(tmpDir, chart.Repository, chart.Chart, chart.Version, username, password)
 	if err != nil {
 		return err
 	}
 
-	if clean {
-		err = removeOutput(chart)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = template(chart.Name, chartFile, chart.Values, chart.Namespace, chart.SkipCRDs, chart.OutputDir, chart.ApiVersions)
+	err = template(tmpDir, chart.Name, filepath.Join(tmpDir, chartFile), chart.Values, chart.Namespace, chart.SkipCRDs, chart.ApiVersions)
 	if err != nil {
 		return err
 	}
+
+	rendered := filepath.Join(tmpDir, chart.Chart)
 
 	if chart.PostProcess.GenerateKustomization {
-		err = generateKustomization(chart.Chart)
+		err = generateKustomization(rendered)
 		if err != nil {
 			return err
 		}
+	}
+
+	target := "."
+	if chart.OutputDir != "" {
+		target = chart.OutputDir
+	}
+	target = filepath.Join(target, chart.Chart)
+
+	err = fs.RemoveAll(target)
+	if err != nil {
+		return err
+	}
+
+	err = fs.Rename(rendered, target)
+	if err != nil {
+		return fmt.Errorf("failed to move rendered chart: %v", err)
 	}
 
 	return nil
@@ -105,7 +122,7 @@ func HelmVersion() error {
 	return execute("helm", execOpts{}, "version")
 }
 
-func template(name string, chart string, values []string, namespace string, skipCRDs bool, outputDir string, ApiVersions []string) error {
+func template(tmpDir string, name string, chart string, values []string, namespace string, skipCRDs bool, ApiVersions []string) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
@@ -117,30 +134,25 @@ func template(name string, chart string, values []string, namespace string, skip
 	for _, valuesfile := range values {
 		args = append(args, "--values", valuesfile)
 	}
-	if len(outputDir) > 0 {
-		args = append(args, "--output-dir", outputDir)
-	} else {
-		args = append(args, "--output-dir", ".")
-	}
+	args = append(args, "--output-dir", tmpDir)
 	if len(ApiVersions) > 0 {
 		for _, apiversion := range ApiVersions {
 			args = append(args, "--api-versions", apiversion)
 		}
 	}
 
-	return execute("helm", execOpts{}, args...)
+	err := execute("helm", execOpts{}, args...)
+	if err != nil {
+		return fmt.Errorf("helm template failed: %v", err)
+	}
+	return nil
 }
 
-func fetch(repository, chart, version string, username, password string) (string, error) {
-	d, err := tempDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to create temporary directory to download helm chart: %v", err)
-	}
-
+func fetch(tmpDir, repository, chart, version string, username, password string) (string, error) {
 	args := []string{"fetch"}
 	args = append(args, "--repo", repository)
 	args = append(args, "--version", version)
-	args = append(args, "--destination", d)
+	args = append(args, "--destination", tmpDir)
 	if username != "" {
 		args = append(args, "--username", username)
 	}
@@ -148,19 +160,15 @@ func fetch(repository, chart, version string, username, password string) (string
 		args = append(args, "--password", password)
 	}
 	args = append(args, chart)
-	err = execute("helm", execOpts{}, args...)
+	err := execute("helm", execOpts{}, args...)
 	if err != nil {
 		return "", err
 	}
 
-	content, err := dirContent(d)
+	result, err := findChartPackage(tmpDir)
 	if err != nil {
 		return "", err
 	}
-	if len(content) != 1 {
-		return "", fmt.Errorf("unexpected content in temporary directory %v", d)
-	}
-	result := filepath.Join(d, content[0])
 	color.Magenta("downloaded %s", result)
 	return result, nil
 }
@@ -186,17 +194,12 @@ func execCommand(name string, opts execOpts, arg ...string) error {
 	return command.Run()
 }
 
-func removeOutputCommand(chart *HelmChart) error {
-	color.Magenta("removing folder %s", chart.Chart)
-	return os.RemoveAll(chart.Chart)
-}
-
 func generateKustomizationCommand(directory string) error {
-	kustomization, err := os.Create(path.Join(directory, "kustomization.yaml"))
+	kustomization, err := fs.Create(path.Join(directory, "kustomization.yaml"))
 	if err != nil {
 		return err
 	}
-	defer kustomization.Close()
+	defer func() { _ = kustomization.Close() }()
 
 	_, err = kustomization.WriteString(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -206,7 +209,7 @@ resources:
 		return err
 	}
 
-	err = filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+	err = afero.Walk(fs, directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -231,18 +234,15 @@ resources:
 	return err
 }
 
-func dirContentCommand(dir string) ([]string, error) {
-	c, err := os.ReadDir(dir)
+func findChartPackage(dir string) (string, error) {
+	c, err := afero.ReadDir(fs, dir)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	var result []string
 	for _, f := range c {
-		result = append(result, f.Name())
+		if filepath.Ext(f.Name()) == ".tgz" {
+			return f.Name(), nil
+		}
 	}
-	return result, nil
-}
-
-func tempDirCommand() (string, error) {
-	return os.MkdirTemp("", "helmt")
+	return "", fmt.Errorf("unexpected content in temporary directory %v", dir)
 }

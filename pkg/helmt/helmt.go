@@ -1,6 +1,7 @@
 package helmt
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -90,6 +91,11 @@ func HelmTemplate(filename, username, password string) error {
 		return err
 	}
 
+	err = downloadChartMetadata(tmpDir, chart.Chart, chart.Repository, chart.Version)
+	if err != nil {
+		println(fmt.Sprintf("Warning: Could not retrieve Chart.yaml (%v)", err))
+	}
+
 	rendered := filepath.Join(tmpDir, chart.Chart)
 
 	if chart.PostProcess.GenerateKustomization {
@@ -122,7 +128,7 @@ func HelmVersion() error {
 	return execute("helm", execOpts{}, "version")
 }
 
-func template(tmpDir string, name string, chart string, values []string, namespace string, skipCRDs bool, ApiVersions []string) error {
+func template(tmpDir, name, chart string, values []string, namespace string, skipCRDs bool, ApiVersions []string) error {
 	args := []string{"template", name, chart}
 	if len(namespace) > 0 {
 		args = append(args, "--namespace", namespace)
@@ -148,7 +154,7 @@ func template(tmpDir string, name string, chart string, values []string, namespa
 	return nil
 }
 
-func fetch(tmpDir, repository, chart, version string, username, password string) (string, error) {
+func fetch(tmpDir, repository, chart, version, username, password string) (string, error) {
 	isOCI := strings.HasPrefix(repository, "oci://")
 	if isOCI {
 		repository = strings.Join([]string{repository, chart}, "/")
@@ -256,4 +262,28 @@ func findChartPackage(dir string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("unexpected content in temporary directory %v", dir)
+}
+
+func downloadChartMetadata(tmpDir, chart, repo, version string) error {
+	isOCI := strings.HasPrefix(repo, "oci://")
+	args := []string{"show", "chart"}
+	if !isOCI {
+		args = append(args, chart, "--repo")
+	}
+	if isOCI {
+		repo = strings.Join([]string{repo, chart}, "/")
+	}
+	args = append(args, repo, "--version", version)
+
+	output := &bytes.Buffer{}
+	// Due to https://github.com/helm/helm/issues/6864 we have to run the command in another directory.
+	// Otherwise the local directory with the chart name will be taken by helm, instead of downloading from the remote repo.
+	err := execute("helm", execOpts{Dir: os.TempDir(), Output: output}, args...)
+	if err != nil {
+		return err
+	}
+
+	targetPath := filepath.Join(tmpDir, chart, "Chart.yaml")
+
+	return ioutil.WriteFile(targetPath, output.Bytes(), os.ModePerm)
 }

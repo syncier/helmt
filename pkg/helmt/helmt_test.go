@@ -2,8 +2,6 @@ package helmt
 
 import (
 	"fmt"
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path"
@@ -12,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewTestExecutor(t *testing.T) *testExecutor {
@@ -191,6 +191,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 jenkins",
 				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir /temp/helmt-123",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0",
 			},
 		},
 		{
@@ -203,6 +204,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
 				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 		},
 		{
@@ -224,6 +226,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0 --destination /temp/helmt-123 jenkins",
 				"helm template something /temp/helmt-123/chart-1.0.0.tgz --skip-tests --output-dir /temp/helmt-123",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.1.0",
 			},
 		},
 		{
@@ -236,6 +239,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15 --destination /temp/helmt-123 prometheus-operator",
 				"helm template agent-prometheus /temp/helmt-123/chart-1.0.0.tgz --namespace infra-monitoring --include-crds --skip-tests --values prometheus-operator-values.yaml --output-dir /temp/helmt-123",
+				"helm show chart prometheus-operator --repo https://kubernetes-charts.storage.googleapis.com --version 8.12.15",
 			},
 			wantGenerateKustomization: true,
 		},
@@ -249,6 +253,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
 				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 			wantGenerateKustomization: false,
 		},
@@ -262,6 +267,7 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0 --destination /temp/helmt-123 syncier-jenkins",
 				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --namespace jenkins --include-crds --skip-tests --values values1.yaml --values values2.yaml --output-dir /temp/helmt-123 --api-versions monitoring.coreos.com/v1 --api-versions monitoring.coreos.com/v1alpha1",
+				"helm show chart syncier-jenkins --repo https://hub.syncier.cloud/chartrepo/library --version 5.6.0",
 			},
 			wantGenerateKustomization: false,
 		},
@@ -277,6 +283,20 @@ func TestHelmTemplate(t *testing.T) {
 				"helm version",
 				"helm fetch --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0 --destination /temp/helmt-123 --username user --password pass jenkins",
 				"helm template something /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir /temp/helmt-123",
+				"helm show chart jenkins --repo https://kubernetes-charts.storage.googleapis.com --version 2.0.0",
+			},
+		},
+		{
+			name:        "helm template using OCI repo format",
+			releaseName: "syncier-jenkins",
+			args: args{
+				filename: "testdata/helm-chart-oci-repo.yaml",
+			},
+			expectedCommands: []string{
+				"helm version",
+				"helm fetch oci://acrsycprodfrc1platform.azurecr.io/charts/syncier-jenkins --version 8.8.3 --destination /temp/helmt-123",
+				"helm template jenkins /temp/helmt-123/chart-1.0.0.tgz --include-crds --skip-tests --output-dir /temp/helmt-123",
+				"helm show chart oci://acrsycprodfrc1platform.azurecr.io/charts/syncier-jenkins --version 8.8.3",
 			},
 		},
 	}

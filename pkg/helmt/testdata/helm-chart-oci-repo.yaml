@@ -1,0 +1,4 @@
+chart: syncier-jenkins
+version: 8.8.3
+repository: oci://acrsycprodfrc1platform.azurecr.io/charts
+name: jenkins

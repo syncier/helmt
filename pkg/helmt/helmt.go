@@ -149,8 +149,16 @@ func template(tmpDir string, name string, chart string, values []string, namespa
 }
 
 func fetch(tmpDir, repository, chart, version string, username, password string) (string, error) {
+	isOCI := strings.HasPrefix(repository, "oci://")
+	if isOCI {
+		repository = strings.Join([]string{repository, chart}, "/")
+	}
+
 	args := []string{"fetch"}
-	args = append(args, "--repo", repository)
+	if !isOCI {
+		args = append(args, "--repo")
+	}
+	args = append(args, repository)
 	args = append(args, "--version", version)
 	args = append(args, "--destination", tmpDir)
 	if username != "" {
@@ -159,7 +167,10 @@ func fetch(tmpDir, repository, chart, version string, username, password string)
 	if password != "" {
 		args = append(args, "--password", password)
 	}
-	args = append(args, chart)
+
+	if !isOCI {
+		args = append(args, chart)
+	}
 	err := execute("helm", execOpts{}, args...)
 	if err != nil {
 		return "", err

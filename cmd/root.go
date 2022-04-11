@@ -27,6 +27,7 @@ import (
 
 const (
 	configFlag   = "config"
+	cleanFlag    = "clean"
 	usernameFlag = "username"
 	passwordFlag = "password"
 )
@@ -77,6 +78,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String(configFlag, "", "config file (default is $HOME/.helmt.yaml)")
+	rootCmd.PersistentFlags().Bool(cleanFlag, false, "deprecated flag - cleaning is done by default")
 	rootCmd.PersistentFlags().StringP(usernameFlag, "u", "", "optional username for chart repository")
 	rootCmd.PersistentFlags().StringP(passwordFlag, "p", "", "optional password for chart repository")
 

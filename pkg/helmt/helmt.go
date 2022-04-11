@@ -2,7 +2,6 @@ package helmt
 
 import (
 	"fmt"
-	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-playground/validator/v10"
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )

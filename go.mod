@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/fatih/color v1.13.0
-	github.com/go-playground/validator/v10 v10.9.0
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/otiai10/copy v1.7.0
 	github.com/spf13/afero v1.7.1
